@@ -6,6 +6,7 @@ Creates Container and NetworkEndpoint nodes with relationships.
 """
 
 import sys
+import json
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 from datetime import datetime
@@ -144,13 +145,15 @@ class DockerScanner:
         """
 
         try:
+            # Convert labels dict to a JSON string for storage
+            labels_str = json.dumps(labels)
             self.neo4j.execute_write(query, {
                 "id": container_id,
                 "name": name,
                 "image": image,
                 "state": state,
                 "created": created,
-                "labels": labels
+                "labels": labels_str
             })
 
         except Exception as e:

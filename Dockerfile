@@ -23,9 +23,11 @@ WORKDIR /app
 
 # Copy requirements first for layer caching
 COPY requirements.txt .
+COPY requirements-dev.txt .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements-dev.txt
 
 # Copy application code
 COPY . .
