@@ -65,11 +65,16 @@ class Neo4jClient:
         finally:
             session.close()
 
-    def execute_write(self, query: str, parameters: Dict[str, Any] = None) -> Result:
-        """Execute write query with automatic transaction management."""
+    def execute_write(self, query: str, parameters: Dict[str, Any] = None) -> None:
+        """
+        Execute a write query within an explicit transaction.
+        This is the recommended way to perform writes for robustness.
+        """
+        def work(tx: Transaction):
+            tx.run(query, parameters or {})
+
         with self.session() as session:
-            result = session.run(query, parameters or {})
-            return result
+            session.write_transaction(work)
 
     def execute_read(self, query: str, parameters: Dict[str, Any] = None) -> List[Dict[str, Any]]:
         """Execute read query and return results as list of dicts."""
