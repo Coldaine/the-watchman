@@ -10,6 +10,14 @@ This strategy consolidates the former ColdWatch test philosophy with The Watchma
 - Favor realistic end-to-end scenarios using behavioral fakes over heavy mocking.
 - Keep the suite fast by separating quick unit tests from slower integration pipelines.
 
+## Risk-Based Priorities
+
+Not all collectors carry the same level of risk. Testing efforts should be prioritized based on the potential impact of a component's failure on the user's system.
+
+- **Low Risk (`file-watchman` lineage):** The File Ingestion collector has a low impact radius. A bug might misplace a downloaded file, which is recoverable.
+- **Medium Risk (System Scanners):** A bug in the project or Docker scanners could lead to an incomplete or inaccurate knowledge graph. This degrades the quality of information but does not impact system stability.
+- **High Risk (GUI Collector):** The GUI Application Collector (from `coldwatch`) is the most critical component to test. As detailed in the legacy `GTK_ACCESSIBILITY_WARNING.md`, improper use of the AT-SPI layer can **freeze or crash user applications and even the entire desktop session**. Therefore, this collector requires the most rigorous stability, performance, and integration testing to ensure it can never negatively impact the user's interactive experience.
+
 ## Test Layers
 
 1. **Unit**: Pure functions, configuration parsing, redaction utilities, and Neo4j query builders.

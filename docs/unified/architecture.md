@@ -11,6 +11,23 @@ The Watchman is now the canonical platform for system awareness, knowledge captu
 - **Modular collectors:** Each sensor runs as an independent worker with a narrow responsibility. Collectors can be enabled or disabled via configuration without impacting the rest of the system.
 - **Actionable output:** The `/ask` API, automation runner, and MCP control layer turn captured knowledge into concrete answers or actions.
 
+## The Power of Unification: Cross-Domain Queries
+
+The primary value of The Watchman is not in any single data source, but in its ability to **correlate data across all of its collectors**. By unifying system events, user interactions, and visual context into a single, interconnected graph, the system can answer complex questions that are impossible for siloed tools to address.
+
+This fusion of data transforms a simple log into a rich, queryable "memory" of the user's digital environment. The success of the project hinges on making these powerful graph traversals accessible through the `/ask` API.
+
+For example, a user could ask:
+
+> "Show me the text I was typing in my code editor right before the Docker container for my web-app started failing, and what was on my screen at that moment?"
+
+Answering this requires combining data from three different domains in a single query:
+1.  **GUI Collector (`coldwatch` lineage):** To get the text from the code editor (`:GuiEvent`).
+2.  **Memory & Change:** To identify the Docker container failure event (`:Event`).
+3.  **Visual Timeline:** To retrieve the corresponding screenshot (`:Snapshot`).
+
+This capability is the central "why" behind the unified architecture.
+
 ## Domain Overview
 
 ### 1. System State Graph
@@ -36,6 +53,9 @@ The personal automation scripts evolve into a long-running collector. It watches
 ### 6. Agent Interface & Orchestration
 
 FastAPI remains the public interface. `/ask` orchestrates intent classification, Cypher query execution, and embedding search. Admin endpoints trigger rescans, screenshots, and automation flows. Connectors to MCP services allow Watchman to start, stop, and monitor auxiliary agents.
+
+#### The Criticality of the `/ask` API
+While the collectors gather a vast amount of data, this data is only as valuable as it is accessible. The `/ask` API is the most critical component of the system, serving as the bridge between the raw knowledge graph and the user. If this natural language interface is not powerful and intuitive, the entire system risks becoming a write-only database. Its successful implementation is the highest priority for delivering on the project's vision.
 
 ## Graph Schema Extensions
 
@@ -77,3 +97,13 @@ These additions are implemented via idempotent Cypher migrations under `scripts/
 - `docs/observability/logging.md`: logging standards, sinks, and correlation guidelines.
 
 This unified architecture replaces the stand-alone documentation from the prior repositories and serves as the source of truth going forward.
+
+## Future Vision: Proactive Automation
+
+Beyond serving as a reactive "memory" that answers user queries, the next evolutionary step for The Watchman is to enable **proactive assistance**.
+
+With a complete and accurate knowledge graph of the user's environment, the system can begin to anticipate needs and automate common workflows. This transforms the tool from a passive observer into an active, intelligent assistant.
+
+For example:
+*   *"I see you've started the 'web-api' Docker container. This project is usually associated with the `~/projects/api-service` directory. Would you like me to open that folder in VS Code?"*
+*   *"You just downloaded a `docker-compose.yml` file. Would you like me to scan it and add its services to the System Graph?"*

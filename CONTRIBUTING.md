@@ -5,6 +5,9 @@ Thank you for your interest in contributing to The Watchman!
 ## Current Status
 
 **⚠️ This project is in early development** - the initial implementation is untested and incomplete.
+**⚠️ This project has a complete MVP core, but is still in active development.**
+
+The core data collection domains (Visual Timeline, System Graph, Event Tracking) are implemented. The remaining work for the full MVP is focused on the Agent Interface (query routing) and MCP Registry (control). The implementation is not yet covered by a full automated test suite.
 
 ## How to Help
 
@@ -43,6 +46,8 @@ Missing pieces that need work:
 - MCP Registry YAML parser
 - Query routing and intent classification
 - LLM integration (Ollama + OpenRouter)
+- **Agent Interface**: Query routing, intent classification, and LLM integration.
+- **MCP Registry**: YAML registry parsing and Docker Compose control logic.
 - Integration tests
 - Docker event watcher
 - Health check monitoring
