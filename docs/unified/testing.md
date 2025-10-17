@@ -69,4 +69,4 @@ uvx pre-commit run --all-files
 - Integrate OpenTelemetry for distributed tracing across collectors.
 - Automate ingestion of archived ColdWatch SQLite databases for migration validation.
 
-This document replaces ColdWatch’s `testing_philosophy.md`, `testing_strategy.md`, and `testing_cheatsheet.md` while factoring in The Watchman’s additional domains.
+This document replaces ColdWatch’s `testing_philosophy.md`, `testing_strategy.md`, and `testing_cheatcheet.md` while factoring in The Watchman’s additional domains.
