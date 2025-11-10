@@ -48,7 +48,30 @@ ColdWatch’s AT-SPI capture loop becomes a first-class collector. It subscribes
 
 ### 5. File Ingestion Collector (from File Watchman)
 
-The personal automation scripts evolve into a long-running collector. It watches the downloads directory, performs SHA-256 deduplication, and routes files into tagged destinations. Each processed item is stored as an `:IngestedDocument` node linked to its source file and target location.
+The personal automation scripts evolve into three long-running collectors that watch the downloads directory:
+
+**5.1 Media Deduplication Collector**
+- Monitors for images and videos (`.jpg`, `.png`, `.webp`, `.mp4`, etc.)
+- Performs SHA-256 content hashing for duplicate detection
+- Routes files to tagged destinations with priority-based matching
+- Creates `:MediaFile` nodes with `:DUPLICATE_OF` and `:TAGGED_AS` relationships
+- Evolved from working `dedupe_downloads.py` (518 files processed in production)
+
+**5.2 Document Ingestion Collector**
+- Watches for documents (`.md`, `.pdf`)
+- Copies to RAG system ingestion directory (`$INGESTION_DIR`)
+- Tracks age and moves files older than 14 days to `Stale/`
+- Creates `:IngestedDocument` nodes linked to source files and destinations
+- No deletion—move-only workflow for safety
+
+**5.3 Export Processing Collector**
+- Detects zip files matching `*exported*.zip` pattern
+- Extracts and categorizes contents by type (code, docs, images, data)
+- Routes to multiple destinations: `Code-Exports/`, `Export-Assets/`, `Export-Data/`, and RAG ingestion
+- Creates `:ProcessedExport` nodes with `:EXTRACTED` relationships to each file
+- Stages original zips for manual review, with eventual stale cleanup
+
+All collectors share common processing utilities: content hashing, tag/type-based routing, and Neo4j graph writing. Files are tracked throughout their lifecycle with full provenance in the graph.
 
 ### 6. Agent Interface & Orchestration
 
@@ -59,12 +82,24 @@ While the collectors gather a vast amount of data, this data is only as valuable
 
 ## Graph Schema Extensions
 
+**GUI Collector Nodes:**
 - `:GuiEvent { id, ts, app, role, window_title, object_id, text_hash, raw_text? }`
 - `(:GuiEvent)-[:SEEN_IN]->(:Software)`
 - `(:GuiEvent)-[:NEXT_EVENT]->(:GuiEvent)` (optional sequencing)
-- `:IngestedDocument { hash, ts, path, mime_type, source, size }`
-- `(:IngestedDocument)-[:DERIVED_FROM]->(:File)`
-- `(:IngestedDocument)-[:ROUTED_TO]->(:Directory)`
+
+**File Ingestion Nodes:**
+- `:IngestedDocument { file_hash, original_filename, original_path, dest_path, file_size, mime_type, ingested_at, tags }`
+- `:MediaFile { file_hash, filename, original_path, dest_path, duplicate, tag, processed_at }`
+- `:ProcessedExport { zip_hash, original_filename, processed_at, file_count, categories }`
+
+**File Ingestion Relationships:**
+- `(:IngestedDocument)-[:SOURCED_FROM]->(:File)`
+- `(:IngestedDocument)-[:INGESTED_TO]->(:Directory)`
+- `(:IngestedDocument)-[:HAS_TAG]->(:Tag)`
+- `(:ProcessedExport)-[:EXTRACTED]->(:IngestedDocument)`
+- `(:ProcessedExport)-[:EXTRACTED]->(:MediaFile)`
+- `(:MediaFile)-[:DUPLICATE_OF]->(:MediaFile)`
+- `(:MediaFile)-[:TAGGED_AS]->(:Tag)`
 
 These additions are implemented via idempotent Cypher migrations under `scripts/migrations/`.
 
@@ -95,6 +130,19 @@ These additions are implemented via idempotent Cypher migrations under `scripts/
 - `docs/unified/testing.md`: comprehensive test strategy for collectors and API layers.
 - `docs/unified/troubleshooting.md`: guidance for AT-SPI, OCR, and graph ingestion issues.
 - `docs/observability/logging.md`: logging standards, sinks, and correlation guidelines.
+- `docs/domains/file_ingest_implementation.md`: detailed implementation plan for file ingestion domain
+- `docs/domains/file_ingest_documents.md`: document ingestion collector specification
+- `docs/domains/file_ingest_exports.md`: export processing collector specification
+
+## Source Repository Integration
+
+This unified architecture consolidates three previously separate repositories:
+
+1. **coldwatch** → `domains/gui_collector/` - AT-SPI event capture
+2. **file-watchman** → `domains/file_ingest/` - Download directory automation
+3. **the-watchman** (core) - System graph, visual timeline, orchestration
+
+The file-watchman functionality has been evolved from standalone cron scripts into long-running collectors with full Neo4j integration, enabling cross-domain queries that correlate file ingestion with system events, GUI interactions, and visual context.
 
 This unified architecture replaces the stand-alone documentation from the prior repositories and serves as the source of truth going forward.
 

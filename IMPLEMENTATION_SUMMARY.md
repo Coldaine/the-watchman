@@ -435,18 +435,19 @@ document_embedding - 1024 dims, cosine similarity (optional)
 - FastAPI skeleton ✅
 - Shared utilities ✅
 
-### Phase 1 (Domains): 75% Complete
+### Phase 1 (Domains): 60% Complete
 - Visual Timeline ✅ (100%)
 - System Graph ✅ (100%)
 - Event Tracking ✅ (100%)
 - MCP Registry ⏳ (25% - stubs only)
+- File Ingest ⏳ (0% - implementation planned, directory structure created)
 
 ### Phase 2 (Integration): 25% Complete
 - Query routing ⏳ (25% - endpoints only)
 - LLM integration ⏳ (25% - client exists)
 - Integration tests ⏳ (0%)
 
-**Overall Progress: 75% Complete**
+**Overall Progress: 65% Complete**
 
 ---
 

@@ -22,6 +22,9 @@ A computer-centric knowledge graph system that tracks what's on your machine, wh
 - `domains/agent_interface/` - Query routing, LLM integration
 - `domains/gui_collector/` - AT-SPI ingestion and normalization
 - `domains/file_ingest/` - Downloads dedupe, routing, and ingestion metadata
+  - **Media Deduplication:** SHA-256 hash-based duplicate detection with tag routing
+  - **Document Ingestion:** Automatic RAG system feeding with age-based stale management
+  - **Export Processing:** Zip extraction and categorization for knowledge artifacts
 
 ### Tech Stack
 
@@ -217,12 +220,13 @@ Verify minimum file age, destination permissions, and lockfile status. See `docs
 
 ## Roadmap
 
-- [ ] Phase 0: Foundation & Contracts ✅
-- [ ] Phase 1: Domain Implementations
-  - [ ] Visual Timeline
-  - [ ] System Graph Seeders
-  - [ ] Event & Change Tracking
-  - [ ] MCP Registry & Control
+- [x] Phase 0: Foundation & Contracts ✅
+- [ ] Phase 1: Domain Implementations (65% complete)
+  - [x] Visual Timeline ✅
+  - [x] System Graph Seeders ✅
+  - [x] Event & Change Tracking ✅
+  - [ ] MCP Registry & Control (25% - stubs)
+  - [ ] File Ingest Domain (planned - from file-watchman)
 - [ ] Phase 2: Integration & Orchestration
 - [ ] Web UI (React + GraphQL)
 - [ ] Browser extension integration
