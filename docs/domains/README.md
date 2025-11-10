@@ -12,6 +12,12 @@ This directory contains detailed implementation plans and specifications for eac
 - Docker Compose integration
 - Migration strategy from standalone cron scripts
 
+**Migration Guide:** [`file_ingest_migration.md`](./file_ingest_migration.md)
+- ⚠️ **file-watchman repo still ACTIVE - do not delete**
+- Safe archival timeline (5-6 weeks after implementation starts)
+- Parallel operation and cutover plan
+- Rollback procedures
+
 **Feature Specifications:**
 - [`file_ingest_documents.md`](./file_ingest_documents.md) - Document ingestion for RAG system
 - [`file_ingest_exports.md`](./file_ingest_exports.md) - Knowledge export processing

@@ -683,7 +683,9 @@ def test_export_collector_extraction():
 
 ### Source Projects
 - **file-watchman repo:** `E:\_projectsGithub\file-watchman\`
-- **dedupe_downloads.py:** Working implementation (518 files processed)
+  - ⚠️ **STILL ACTIVE - DO NOT DELETE YET**
+  - See [`file_ingest_migration.md`](./file_ingest_migration.md) for safe archival timeline
+- **dedupe_downloads.py:** Working implementation (518 files processed, running in production)
 - **Feature specs:** `file-watchman/docs/features/*.md`
 - **Implementation plan:** `file-watchman/docs/plans/repository-refactor-and-implementation.md`
 
