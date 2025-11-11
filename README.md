@@ -1,15 +1,25 @@
 # The Watchman
 
-A computer-centric knowledge graph system that tracks what's on your machine, what's running, what changed, what you were looking at, and what you were typing.
+A **distributed knowledge graph system** that tracks what's on **all your machines**: what's installed, what's running, what changed, what you were looking at, and what you were typing. Features master/satellite architecture with always-on queue services for zero data loss.
 
 ## Features
 
-- **System State Graph**: Maps entities and topology on your machine (files, projects, containers, services, configs)
-- **Memory & Change**: Event stream tracking file changes, container events, service restarts
-- **Visual Timeline**: Continuous screenshots with OCR for searchable screen history
+### Core Domains
+- **System State Graph**: Maps entities and topology across all machines (files, projects, containers, services, configs)
+- **Memory & Change**: Event stream tracking file changes, container events, service restarts, package installations
+- **Visual Timeline**: Continuous screenshots with smart diffing, OCR, and lazy processing
 - **GUI Event Capture**: AT-SPI collector (ColdWatch lineage) records focused text and accessibility events
-- **MCP Registry & Control**: Manage and control MCP servers via Docker Compose
+- **MCP Registry & Control**: Central orchestrator for all MCP servers (Docker + local tools)
 - **Agent Interface**: Natural language queries powered by Ollama (local) with OpenRouter fallback
+
+### Infrastructure Management
+- **Distributed Architecture**: Master/satellite/queue topology for managing multiple computers
+- **Backup Management**: Neo4j, configs, Docker volumes → S3 with verification and FIDO2 encryption
+- **Network Monitoring**: Interfaces, firewall rules, DNS, VPN, routing tables
+- **Git Runner Management**: Self-hosted CI/CD runners (GitHub Actions, GitLab CI) with auto-scaling
+- **Obsidian Vault Sync**: Auto-commit, conflict detection, media rsync, backup integration
+- **Data Retention**: Configurable policies per domain with exemptions and GDPR compliance
+- **FIDO2 Encryption**: Hardware key encryption for backups, secrets, and sensitive data
 
 ## Architecture
 
@@ -244,7 +254,8 @@ Verify minimum file age, destination permissions, and lockfile status. See `docs
 
 ### Core Architecture
 - **Unified architecture**: `docs/unified/architecture.md` - Complete system overview
-- **System management**: `docs/unified/system_management.md` - Tool installs, backups, network, monitoring
+- **Distributed architecture**: `docs/unified/distributed_architecture.md` - Master/satellite/queue topology
+- **System management**: `docs/unified/system_management.md` - Git runners, Obsidian, backups, network, retention, FIDO2
 - **MCP management**: `docs/unified/mcp_management.md` - MCP server orchestration strategy
 - **Smart capture**: `docs/unified/smart_capture.md` - Screenshot diffing, lazy OCR, smart triggers
 
@@ -267,15 +278,24 @@ Verify minimum file age, destination permissions, and lockfile status. See `docs
   - [x] System Graph Seeders ✅
   - [x] Event & Change Tracking ✅
   - [x] File Ingest Domain ✅
-- [ ] Phase 2: System Management & MCP
+- [ ] Phase 2: Distributed & Infrastructure
+  - [ ] Distributed Architecture
+    - [ ] Master/satellite/queue modes
+    - [ ] Data forwarding and offline buffering
+    - [ ] Machine provisioning API
+    - [ ] Always-on queue service (Raspberry Pi)
   - [ ] MCP Registry & Control (25% - stubs)
     - [ ] Complete MCP server lifecycle management
     - [ ] Docker Hub integration
     - [ ] Local tool installation strategy
   - [ ] System Management Domain
     - [x] Software install monitoring (documented)
-    - [ ] Backup management (orchestrator, verification, S3)
+    - [ ] Backup management (orchestrator, verification, S3, FIDO2)
     - [ ] Network monitoring (topology, firewall, VPN)
+    - [ ] Git runner management (GitHub Actions, GitLab CI)
+    - [ ] Obsidian vault sync (git, rsync, conflicts)
+    - [ ] Data retention policies (per-domain, exemptions)
+    - [ ] FIDO2 encryption (backups, secrets)
     - [ ] Resource monitoring (CPU, memory, disk, I/O)
     - [ ] Configuration management (validation, rollback)
 - [ ] Phase 3: Integration & Orchestration

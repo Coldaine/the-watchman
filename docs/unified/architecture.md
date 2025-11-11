@@ -1,14 +1,16 @@
 # Unified Architecture
 
-**Last Updated:** 2025-10-14
+**Last Updated:** 2025-11-11
 
-The Watchman is now the canonical platform for system awareness, knowledge capture, and automation across the desktop. This document synthesizes the architecture plans and domain specifications that previously lived in the `coldwatch`, `file-watchman`, and `the-watchman` repositories.
+The Watchman is now the canonical platform for system awareness, knowledge capture, and automation across **multiple machines**. This document synthesizes the architecture plans and domain specifications that previously lived in the `coldwatch`, `file-watchman`, and `the-watchman` repositories.
 
 ## Guiding Principles
 
-- **Local-first:** All data lives on the machine. No cloud dependencies for core capture or analysis.
+- **Local-first:** All data lives on your machines. No cloud dependencies for core capture or analysis.
+- **Distributed by design:** Supports master/satellite topology for managing multiple computers with a unified knowledge graph.
 - **Graph-centric:** Neo4j remains the system of record. Every collector writes entities and relationships into the graph so queries span domains without translation layers.
 - **Modular collectors:** Each sensor runs as an independent worker with a narrow responsibility. Collectors can be enabled or disabled via configuration without impacting the rest of the system.
+- **Always-on resilience:** Queue services (e.g., Raspberry Pi) buffer data when master is offline, ensuring no data loss.
 - **Actionable output:** The `/ask` API, automation runner, and MCP control layer turn captured knowledge into concrete answers or actions.
 
 ## The Power of Unification: Cross-Domain Queries
@@ -149,10 +151,31 @@ These additions are implemented via idempotent Cypher migrations under `scripts/
 - Retry policies and circuit breakers isolate transient failures (DBus, Neo4j outages).
 - Sampling controls prevent AT-SPI floods; ingestion collectors enforce queue depth limits.
 
+## Distributed Architecture
+
+The Watchman supports three deployment modes for managing multiple machines:
+
+1. **Master Mode** - Full installation with Neo4j, all collectors, complete query interface
+2. **Satellite Mode** - Lightweight collector that forwards data to master (laptops, work PCs)
+3. **Queue Mode** - Always-on buffer service (Raspberry Pi) that queues data when master is offline
+
+This enables scenarios like:
+- Primary dev machine (master) + multiple laptops (satellites)
+- Always-on Raspberry Pi buffering data when dev machine is shut down
+- Unified knowledge graph spanning all your computers
+- Automated provisioning of new machines with generated configs
+
+See `docs/unified/distributed_architecture.md` for complete specification including:
+- Master/satellite/queue architecture diagrams
+- Data forwarding and offline buffering
+- Machine provisioning and configuration management
+- Graph schema for multi-machine topology
+
 ## Documentation Map
 
 ### Core Architecture
 - `docs/unified/architecture.md`: This document - unified architecture overview
+- `docs/unified/distributed_architecture.md`: Multi-machine master/satellite/queue topology
 - `docs/unified/system_management.md`: Complete enumeration of system management responsibilities
 - `docs/unified/mcp_management.md`: MCP server lifecycle and orchestration strategy
 - `docs/unified/smart_capture.md`: Smart screenshot capture features (diffing, triggers, clustering)

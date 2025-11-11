@@ -511,7 +511,491 @@ Track system-wide resource usage:
 
 ---
 
-### 8. Security & Compliance 🔴 **NOT DOCUMENTED**
+### 8. Git Runner Management 🔴 **NOT IMPLEMENTED**
+
+**Purpose**
+
+Manage self-hosted CI/CD runners (GitHub Actions, GitLab CI, etc.) including:
+- Runner lifecycle (installation, registration, updates)
+- Job monitoring and logging
+- Resource allocation
+- Runner health checks
+- Auto-scaling based on workload
+
+**Location:** `domains/runner_manager/`
+
+#### 8.1 Runner Orchestrator
+
+```python
+class RunnerManager:
+    """Manage self-hosted CI/CD runners."""
+
+    async def register_runner(self, provider: str, repo: str):
+        """Register new runner with CI provider."""
+        # GitHub: gh api repos/{repo}/actions/runners/registration-token
+        # GitLab: gitlab-runner register
+        pass
+
+    async def monitor_jobs(self):
+        """Track running jobs and resource usage."""
+        # Query runner API for active jobs
+        # Monitor CPU, memory per job
+        pass
+
+    async def scale_runners(self):
+        """Auto-scale runners based on queue depth."""
+        # If jobs queued > threshold, spin up more runners
+        pass
+
+    async def update_runners(self):
+        """Update runner software versions."""
+        pass
+```
+
+**Graph Schema:**
+```cypher
+(:GitRunner {
+  id: "runner-01",
+  provider: "github",  # github, gitlab, gitea
+  repo: "Coldaine/the-watchman",
+  status: "idle",  # idle, running, offline
+  version: "2.311.0",
+  registered_at: datetime(),
+  last_job: datetime(),
+  jobs_completed: 145
+})
+
+(:CIJob {
+  id: "job_123",
+  repo: "Coldaine/the-watchman",
+  workflow: "ci.yml",
+  status: "running",
+  started_at: datetime(),
+  duration_seconds: 120
+})-[:RAN_ON]->(:GitRunner)
+```
+
+**Configuration:**
+```toml
+[git_runners]
+enabled = true
+auto_register = true  # Auto-register on startup
+
+[[git_runners.providers]]
+provider = "github"
+repos = ["Coldaine/the-watchman", "Coldaine/dotfiles"]
+runner_count = 2
+auto_scale = true
+max_runners = 5
+
+[[git_runners.providers]]
+provider = "gitlab"
+url = "https://gitlab.com"
+groups = ["mygroup"]
+runner_count = 1
+```
+
+**API Endpoints:**
+```bash
+# List runners
+GET /admin/runners
+Response: [
+  {
+    "id": "runner-01",
+    "provider": "github",
+    "status": "idle",
+    "jobs_completed": 145
+  }
+]
+
+# Register new runner
+POST /admin/runners/register
+Body: {
+  "provider": "github",
+  "repo": "Coldaine/the-watchman"
+}
+
+# View job history
+GET /admin/runners/jobs?days=7
+```
+
+**Queries:**
+- "Which runners are currently running jobs?"
+- "Show me failed CI jobs from last week"
+- "How many jobs did runner-01 complete today?"
+- "What's the average CI job duration?"
+
+**Status:** 🔴 **NOT IMPLEMENTED**
+
+---
+
+### 9. Obsidian Vault Sync Management 🔴 **NOT IMPLEMENTED**
+
+**Purpose**
+
+Orchestrate self-hosted Obsidian vault synchronization:
+- Git-based sync (auto-commit, auto-pull)
+- Rsync fallback for large media files
+- Conflict detection and resolution
+- Backup integration (vault included in backup jobs)
+- Sync status monitoring
+
+**Location:** `domains/obsidian_sync/`
+
+#### 9.1 Obsidian Sync Orchestrator
+
+```python
+class ObsidianSyncManager:
+    """Manage Obsidian vault synchronization."""
+
+    async def auto_sync(self, vault_path: Path):
+        """Automatically sync vault to git."""
+        # Check for changes
+        # Auto-commit with timestamp
+        # Pull from remote (handle conflicts)
+        # Push to remote
+        pass
+
+    async def detect_conflicts(self, vault_path: Path):
+        """Detect merge conflicts."""
+        # Check for conflict markers
+        # Alert user
+        pass
+
+    async def backup_vault(self, vault_path: Path):
+        """Trigger vault backup."""
+        # Integrate with backup manager
+        pass
+
+    async def sync_media(self, vault_path: Path):
+        """Rsync large media files."""
+        # Images, PDFs, videos separate from git
+        pass
+```
+
+**Graph Schema:**
+```cypher
+(:ObsidianVault {
+  id: "vault-main",
+  name: "Main Vault",
+  path: "/home/user/Documents/Obsidian/MainVault",
+  git_remote: "https://github.com/Coldaine/obsidian-vault.git",
+  last_sync: datetime(),
+  sync_status: "synced",  # synced, syncing, conflict, error
+  file_count: 892,
+  note_count: 456,
+  total_size_mb: 250
+})
+
+(:ObsidianSyncEvent {
+  vault_id: "vault-main",
+  timestamp: datetime(),
+  type: "auto_commit",  # auto_commit, pull, push, conflict
+  files_changed: 3,
+  commit_hash: "abc123"
+})-[:SYNCED]->(:ObsidianVault)
+```
+
+**Configuration:**
+```toml
+[obsidian]
+enabled = true
+
+[[obsidian.vaults]]
+name = "Main Vault"
+path = "/home/user/Documents/Obsidian/MainVault"
+git_remote = "https://github.com/Coldaine/obsidian-vault.git"
+auto_sync = true
+sync_interval = 300  # 5 minutes
+auto_commit = true
+commit_message_template = "Auto-sync: {timestamp}"
+
+# Media sync (separate from git for performance)
+media_sync_enabled = true
+media_extensions = [".png", ".jpg", ".pdf", ".mp4"]
+media_rsync_target = "user@nas.home.lan:/backups/obsidian-media/"
+
+# Conflict handling
+conflict_strategy = "alert"  # alert, latest, manual
+```
+
+**API Endpoints:**
+```bash
+# Trigger manual sync
+POST /admin/obsidian/sync/{vault_id}
+
+# View sync status
+GET /admin/obsidian/status
+Response: [
+  {
+    "vault_id": "vault-main",
+    "sync_status": "synced",
+    "last_sync": "2025-11-11T14:30:00Z",
+    "conflicts": 0
+  }
+]
+
+# View sync history
+GET /admin/obsidian/history?vault_id=vault-main&days=7
+```
+
+**Queries:**
+- "When was my Obsidian vault last synced?"
+- "Are there any sync conflicts?"
+- "Show me sync events from today"
+- "How many notes did I add this week?"
+
+**Status:** 🔴 **NOT IMPLEMENTED**
+
+---
+
+### 10. Data Retention Policies 🔴 **PARTIALLY DOCUMENTED**
+
+**Purpose**
+
+Comprehensive data retention management across all domains:
+- Configurable retention periods per data type
+- Automatic purging of expired data
+- Retention enforcement with audit trail
+- GDPR/compliance-friendly retention rules
+- Selective retention (keep important, purge routine)
+
+**Graph Schema:**
+```cypher
+(:RetentionPolicy {
+  id: "policy-screenshots",
+  data_type: "Screenshot",
+  retention_days: 14,
+  enforcement: "automatic",  # automatic, manual, disabled
+  purge_strategy: "soft_delete",  # soft_delete, hard_delete, archive
+  created_at: datetime()
+})
+
+(:RetentionEvent {
+  policy_id: "policy-screenshots",
+  timestamp: datetime(),
+  action: "purged",  # purged, archived, exempted
+  records_affected: 145,
+  size_freed_mb: 1250
+})-[:APPLIED]->(:RetentionPolicy)
+```
+
+**Configuration:**
+```toml
+[retention]
+# Global defaults
+default_retention_days = 90
+enforcement_schedule = "0 3 * * *"  # Daily at 3 AM
+dry_run = false  # Test mode, no actual deletion
+
+# Per-domain retention
+[retention.screenshots]
+retention_days = 14
+purge_strategy = "hard_delete"  # Delete image files
+keep_metadata = true  # Keep :Snapshot nodes
+exempt_tagged = ["important", "reference"]  # Never delete these
+
+[retention.ocr_text]
+retention_days = 90
+purge_strategy = "soft_delete"  # Mark deleted, keep in DB
+
+[retention.events]
+retention_days = 365
+purge_strategy = "archive"  # Move to cold storage
+archive_location = "s3://watchman-archive/events/"
+
+[retention.backups]
+retention_days = 90
+purge_strategy = "hard_delete"
+keep_monthly = true  # Keep one backup per month indefinitely
+
+[retention.logs]
+retention_days = 30
+purge_strategy = "hard_delete"
+
+[retention.gui_events]
+retention_days = 60
+purge_strategy = "hard_delete"
+
+[retention.file_ingest_metadata]
+retention_days = 180
+purge_strategy = "soft_delete"
+
+# Exemptions (never delete)
+[retention.exemptions]
+# Keep all data from specific date ranges
+date_ranges = [
+  { start = "2025-10-01", end = "2025-10-31", reason = "Critical project month" }
+]
+# Keep data with specific tags
+tags = ["important", "reference", "legal"]
+```
+
+**API Endpoints:**
+```bash
+# View retention policies
+GET /admin/retention/policies
+
+# Preview what would be purged
+GET /admin/retention/preview?policy=screenshots&dry_run=true
+Response: {
+  "records_to_purge": 145,
+  "size_freed_mb": 1250,
+  "oldest_record": "2025-09-15T10:00:00Z",
+  "newest_record": "2025-10-28T18:00:00Z"
+}
+
+# Trigger manual purge
+POST /admin/retention/purge
+Body: {
+  "policy": "screenshots",
+  "confirm": true
+}
+
+# Exempt specific records from purging
+POST /admin/retention/exempt
+Body: {
+  "record_ids": ["snapshot_123", "snapshot_456"],
+  "reason": "Important reference"
+}
+```
+
+**Queries:**
+- "How much disk space will retention purge free up?"
+- "When was the last retention purge?"
+- "Show me exempted records"
+- "What's the oldest data in the system?"
+
+**Status:** 🟡 **PARTIALLY DOCUMENTED** - Basic retention exists, needs full policy engine
+
+---
+
+### 11. FIDO2 Encryption 🔴 **NOT IMPLEMENTED**
+
+**Purpose**
+
+Encrypt sensitive data using FIDO2 hardware keys (YubiKey, etc.):
+- Backup encryption with hardware key
+- Sensitive configuration encryption
+- Secret management (API keys, tokens)
+- Database field-level encryption
+- Multi-factor decryption (require physical key)
+
+**Location:** `domains/security_manager/fido2.py`
+
+#### 11.1 FIDO2 Encryption Manager
+
+```python
+class FIDO2EncryptionManager:
+    """Manage FIDO2-encrypted sensitive data."""
+
+    async def encrypt_with_fido2(self, data: bytes, label: str) -> dict:
+        """Encrypt data using FIDO2 key."""
+        # Challenge user to touch FIDO2 key
+        # Derive encryption key from FIDO2 credential
+        # Encrypt data with AES-256-GCM
+        # Store encrypted blob + metadata
+        pass
+
+    async def decrypt_with_fido2(self, encrypted_blob: bytes) -> bytes:
+        """Decrypt data (requires FIDO2 key)."""
+        # Challenge user to touch FIDO2 key
+        # Derive decryption key from FIDO2 credential
+        # Decrypt and return
+        pass
+
+    async def encrypt_backup(self, backup_path: Path):
+        """Encrypt backup with FIDO2."""
+        # Read backup file
+        # Encrypt with FIDO2
+        # Replace with encrypted version
+        pass
+```
+
+**Configuration:**
+```toml
+[security]
+fido2_enabled = true
+fido2_required_for = ["backups", "secrets", "api_keys"]
+
+# FIDO2 key configuration
+[security.fido2]
+device_path = "/dev/hidraw0"  # Auto-detect if empty
+timeout_seconds = 30  # Time to touch key
+credential_id = ""  # Generated on first use
+
+# What to encrypt
+[security.encryption]
+encrypt_backups = true
+encrypt_neo4j_dumps = true
+encrypt_config_backups = true
+encrypt_api_tokens = true
+encrypt_satellite_tokens = true
+
+# Encryption algorithm
+encryption_algorithm = "AES-256-GCM"
+key_derivation = "HKDF-SHA256"
+```
+
+**Graph Schema:**
+```cypher
+(:EncryptedData {
+  id: "encrypted_backup_123",
+  type: "neo4j_backup",
+  encrypted_at: datetime(),
+  encryption_method: "FIDO2-AES256",
+  fido2_credential_id: "abc123",
+  blob_location: "s3://backups/encrypted_neo4j_2025-11-11.enc",
+  size_bytes: 1024000,
+  checksum: "sha256:xyz789"
+})
+
+(:FIDO2Key {
+  credential_id: "abc123",
+  label: "YubiKey 5C",
+  registered_at: datetime(),
+  last_used: datetime(),
+  usage_count: 45
+})
+```
+
+**API Endpoints:**
+```bash
+# Encrypt file with FIDO2
+POST /admin/security/encrypt
+Body: {
+  "file_path": "/path/to/sensitive.dat",
+  "label": "Important backup"
+}
+Response: {
+  "encrypted_path": "/path/to/sensitive.dat.enc",
+  "credential_id": "abc123"
+}
+
+# Decrypt file (requires FIDO2 touch)
+POST /admin/security/decrypt
+Body: {
+  "encrypted_path": "/path/to/sensitive.dat.enc"
+}
+Response: {
+  "decrypted_path": "/tmp/decrypted_sensitive.dat",
+  "touch_required": true
+}
+
+# List FIDO2-encrypted data
+GET /admin/security/encrypted
+```
+
+**Queries:**
+- "Which backups are FIDO2-encrypted?"
+- "When was my FIDO2 key last used?"
+- "Show me all encrypted secrets"
+
+**Status:** 🔴 **NOT IMPLEMENTED** - Requires libfido2 integration
+
+---
+
+### 12. Security & Compliance 🔴 **NOT DOCUMENTED**
 
 **Responsibilities:**
 - Track security updates
@@ -537,12 +1021,16 @@ Track system-wide resource usage:
 | Container Monitoring | ✅ Implemented | `domains/memory_change/watchers/docker.py` | High |
 | Config File Tracking | 🟡 Partial | `domains/system_graph/scanners/configs.py` | Medium |
 | Network Topology | 🟡 Partial | `domains/system_graph/scanners/network.py` (planned) | Medium |
-| Backup Management | 🔴 Not Implemented | `domains/backup_manager/` (planned) | High |
+| Backup Management | ✅ Documented | `domains/backup_manager/` (planned) | High |
+| Git Runner Management | ✅ Documented | `domains/runner_manager/` (planned) | Medium |
+| Obsidian Vault Sync | ✅ Documented | `domains/obsidian_sync/` (planned) | Medium |
+| Data Retention Policies | 🟡 Partial | Extend all domains | High |
+| FIDO2 Encryption | ✅ Documented | `domains/security_manager/fido2.py` (planned) | Medium |
 | Enhanced Service Metrics | 🔴 Not Implemented | Extend service monitor | Medium |
 | Configuration Management | 🔴 Not Implemented | `domains/config_manager/` (planned) | Medium |
 | Resource Monitoring | 🔴 Not Implemented | `domains/resource_monitor/` (planned) | Medium |
 | Network Config Management | 🔴 Not Implemented | Extend network scanner | Low |
-| Security Monitoring | 🔴 Not Implemented | `domains/security_monitor/` (future) | Low |
+| Security & Compliance | 🔴 Not Implemented | `domains/security_monitor/` (future) | Low |
 
 ## Implementation Roadmap
 

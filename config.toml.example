@@ -1,6 +1,86 @@
 # The Watchman Configuration File
 # Copy this to config.toml and customize for your environment
 
+# ============================================================================
+# DEPLOYMENT MODE
+# ============================================================================
+# The Watchman can run in three modes:
+# - master: Full installation with Neo4j, all collectors, query interface
+# - satellite: Lightweight collector that forwards data to master
+# - queue: Always-on buffer service (e.g., Raspberry Pi) for when master is offline
+
+[mode]
+type = "master"  # Options: master, satellite, queue
+instance_id = "watchman-primary"  # Unique identifier for this instance
+
+# Master-specific settings (only used if type = "master")
+[master]
+enable_ingestion = true  # Accept data from satellites
+listen_address = "0.0.0.0:8000"
+
+# TLS for secure satellite connections
+tls_enabled = false
+tls_cert = "/etc/watchman/certs/master.crt"
+tls_key = "/etc/watchman/certs/master.key"
+
+# Authentication for satellites
+satellite_auth_enabled = true
+satellite_tokens_file = "/etc/watchman/satellite_tokens.yaml"
+
+# Always-on queue service integration
+queue_service_enabled = false
+queue_service_url = "https://queue.home.lan:8001"
+queue_poll_interval = 60  # seconds
+
+# Satellite-specific settings (only used if type = "satellite")
+[satellite]
+master_url = "https://watchman.home.lan:8000"
+auth_token = ""  # Generated during registration
+
+# Retry policy for master connection
+retry_enabled = true
+retry_max_attempts = 5
+retry_backoff = "exponential"  # 2s, 4s, 8s, 16s, 32s
+
+# Offline buffering when master is unreachable
+buffer_enabled = true
+buffer_dir = "/var/lib/watchman/buffer"
+buffer_max_size_mb = 1000
+buffer_flush_interval = 60  # seconds
+
+# Data forwarding settings
+forward_batch_size = 100  # Events per batch
+forward_compression = true  # gzip compression
+
+# Queue-specific settings (only used if type = "queue")
+[queue]
+listen_address = "0.0.0.0:8001"
+
+# Redis for buffering
+redis_url = "redis://localhost:6379"
+redis_queue_key = "watchman:queue"
+redis_max_memory_mb = 500
+
+# Disk overflow (if Redis full)
+disk_overflow_enabled = true
+disk_overflow_dir = "/mnt/storage/watchman/queue"
+disk_overflow_max_gb = 10
+
+# Master forwarding
+queue_master_url = "https://watchman.home.lan:8000"
+queue_master_auth_token = ""  # Queue service auth token
+queue_master_poll_interval = 60  # Check if master is online
+queue_flush_batch_size = 500
+queue_flush_interval = 30  # seconds when master online
+
+# Health monitoring
+queue_health_check_enabled = true
+queue_alert_on_size_mb = 800  # Alert if queue growing too large
+
+# ============================================================================
+# DATABASE (Master mode only - ignored in satellite/queue modes)
+# ============================================================================
+
 [neo4j]
 uri = "bolt://localhost:7687"
 user = "neo4j"
