@@ -46,13 +46,18 @@ A computer-centric knowledge graph system that tracks what's on your machine, wh
 
 1. Clone the repository
 
-2. Copy environment template:
+2. Copy configuration template:
 
+   ```bash
+   cp config.toml.example config.toml
+   ```
+
+   Or use environment variables:
    ```bash
    cp .env.example .env
    ```
 
-3. Edit `.env` with your configuration
+3. Edit `config.toml` (or `.env`) with your configuration
 
 4. Start services:
 
@@ -166,24 +171,49 @@ docker-compose exec api pytest tests/integration/
 
 ## Configuration
 
-### Screenshot Intervals
+The Watchman supports **TOML configuration files** (recommended) or environment variables (legacy).
 
-Edit `SCREENSHOT_INTERVAL` in `.env` (in seconds):
+**Priority order:** `config.toml` > environment variables > `.env` file > defaults
 
-- Fast: 10 seconds (high disk usage)
-- Default: 300 seconds (5 minutes)
-- Slow: 600 seconds (10 minutes)
+### TOML Configuration (Recommended)
 
-### Privacy Controls
+Copy `config.toml.example` to `config.toml` and customize:
 
-Configure in `.env`:
+```toml
+[screenshot]
+interval = 300  # seconds
+enable_diffing = true  # Only capture when screen changes
+diff_threshold = 0.10  # 10% change required
 
+[screenshot.smart_capture]
+enable_smart_capture = true
+capture_on_app_switch = true  # Capture when changing apps
+capture_on_idle_return = true  # Capture when returning from idle
+
+[ocr]
+enable_lazy_processing = false  # Process immediately vs. on-demand
+
+[privacy]
+redact_patterns = [".*@.*\\.com", "sk-.*", "ghp_.*"]
+exclude_apps = ["keepassxc", "1password"]
+
+[features]
+visual_timeline = true
+system_graph = true
+gui_collector = false  # AT-SPI event capture
+```
+
+See `config.toml.example` for all available options.
+
+### Legacy Environment Variables
+
+Still supported for backward compatibility:
+
+- `SCREENSHOT_INTERVAL`: Capture interval in seconds (default: 300)
 - `REDACT_PATTERNS`: Regex patterns to redact from OCR
 - `EXCLUDE_APPS`: Apps to skip screenshot or GUI capture
-- `IMAGE_RETENTION_DAYS`: How long to keep raw images
-- `OCR_RETENTION_DAYS`: How long to keep OCR text
-- `GUI_CAPTURE_ENABLED`: Toggle GUI event ingestion (defaults to off)
-- `GUI_CAPTURE_TEXT`: Include raw widget text (defaults to hashes only)
+- `IMAGE_RETENTION_DAYS`: How long to keep raw images (default: 14)
+- `OCR_RETENTION_DAYS`: How long to keep OCR text (default: 90)
 
 ## Troubleshooting
 
@@ -213,6 +243,8 @@ Verify minimum file age, destination permissions, and lockfile status. See `docs
 ## Documentation
 
 - Unified architecture: `docs/unified/architecture.md`
+- Smart capture features: `docs/unified/smart_capture.md`
+- MCP management strategy: `docs/unified/mcp_management.md`
 - Privacy & data handling: `docs/unified/privacy.md`
 - Testing plan: `docs/unified/testing.md`
 - Troubleshooting playbook: `docs/unified/troubleshooting.md`
@@ -221,16 +253,29 @@ Verify minimum file age, destination permissions, and lockfile status. See `docs
 ## Roadmap
 
 - [x] Phase 0: Foundation & Contracts ✅
-- [ ] Phase 1: Domain Implementations (65% complete)
-  - [x] Visual Timeline ✅
+- [ ] Phase 1: Domain Implementations (70% complete)
+  - [x] Visual Timeline (Basic) ✅
+  - [ ] Visual Timeline (Smart Features) - Planned
+    - [ ] Screenshot diffing/hashing
+    - [ ] Smart capture triggers
+    - [ ] Similarity clustering
+    - [ ] Lazy OCR processing
   - [x] System Graph Seeders ✅
   - [x] Event & Change Tracking ✅
   - [ ] MCP Registry & Control (25% - stubs)
-  - [ ] File Ingest Domain (planned - from file-watchman)
+    - [ ] Complete MCP server lifecycle management
+    - [ ] Docker Hub integration
+    - [ ] Local tool installation strategy
+  - [x] File Ingest Domain ✅
 - [ ] Phase 2: Integration & Orchestration
-- [ ] Web UI (React + GraphQL)
-- [ ] Browser extension integration
-- [ ] Mobile companion app
+  - [ ] Agent Interface completion
+  - [ ] Review API (/review endpoint)
+  - [ ] MCP orchestration & assignment
+- [ ] Phase 3: Advanced Features
+  - [ ] Web UI (React + GraphQL)
+  - [ ] Browser extension integration
+  - [ ] Mobile companion app
+  - [ ] Proactive automation triggers
 
 ## License
 
