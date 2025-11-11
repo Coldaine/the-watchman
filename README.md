@@ -242,13 +242,17 @@ Verify minimum file age, destination permissions, and lockfile status. See `docs
 
 ## Documentation
 
-- Unified architecture: `docs/unified/architecture.md`
-- Smart capture features: `docs/unified/smart_capture.md`
-- MCP management strategy: `docs/unified/mcp_management.md`
-- Privacy & data handling: `docs/unified/privacy.md`
-- Testing plan: `docs/unified/testing.md`
-- Troubleshooting playbook: `docs/unified/troubleshooting.md`
-- Logging standards: `docs/observability/logging.md`
+### Core Architecture
+- **Unified architecture**: `docs/unified/architecture.md` - Complete system overview
+- **System management**: `docs/unified/system_management.md` - Tool installs, backups, network, monitoring
+- **MCP management**: `docs/unified/mcp_management.md` - MCP server orchestration strategy
+- **Smart capture**: `docs/unified/smart_capture.md` - Screenshot diffing, lazy OCR, smart triggers
+
+### Operations
+- **Privacy & data handling**: `docs/unified/privacy.md`
+- **Testing plan**: `docs/unified/testing.md`
+- **Troubleshooting**: `docs/unified/troubleshooting.md`
+- **Logging standards**: `docs/observability/logging.md`
 
 ## Roadmap
 
@@ -262,20 +266,28 @@ Verify minimum file age, destination permissions, and lockfile status. See `docs
     - [ ] Lazy OCR processing
   - [x] System Graph Seeders ✅
   - [x] Event & Change Tracking ✅
+  - [x] File Ingest Domain ✅
+- [ ] Phase 2: System Management & MCP
   - [ ] MCP Registry & Control (25% - stubs)
     - [ ] Complete MCP server lifecycle management
     - [ ] Docker Hub integration
     - [ ] Local tool installation strategy
-  - [x] File Ingest Domain ✅
-- [ ] Phase 2: Integration & Orchestration
+  - [ ] System Management Domain
+    - [x] Software install monitoring (documented)
+    - [ ] Backup management (orchestrator, verification, S3)
+    - [ ] Network monitoring (topology, firewall, VPN)
+    - [ ] Resource monitoring (CPU, memory, disk, I/O)
+    - [ ] Configuration management (validation, rollback)
+- [ ] Phase 3: Integration & Orchestration
   - [ ] Agent Interface completion
   - [ ] Review API (/review endpoint)
   - [ ] MCP orchestration & assignment
-- [ ] Phase 3: Advanced Features
+- [ ] Phase 4: Advanced Features
   - [ ] Web UI (React + GraphQL)
   - [ ] Browser extension integration
   - [ ] Mobile companion app
   - [ ] Proactive automation triggers
+  - [ ] Security monitoring (CVE tracking, audit trail)
 
 ## License
 

@@ -73,7 +73,32 @@ The personal automation scripts evolve into three long-running collectors that w
 
 All collectors share common processing utilities: content hashing, tag/type-based routing, and Neo4j graph writing. Files are tracked throughout their lifecycle with full provenance in the graph.
 
-### 6. Agent Interface & Orchestration
+### 6. MCP Registry & Control
+
+The Watchman serves as the **central orchestrator for all MCP servers** in the environment. It manages the complete lifecycle: discovery, deployment, health monitoring, and tool indexing. Supports both Docker-based and local binary deployments, with Docker Hub integration for discovering new MCP servers.
+
+See `docs/unified/mcp_management.md` for complete specification.
+
+### 7. System Management & Infrastructure
+
+The Watchman is responsible for monitoring and managing all system-level concerns:
+
+**Current Responsibilities:**
+- **Software installation monitoring**: Track package installs/updates/removals via package manager logs
+- **Service monitoring**: Track systemd services, Docker containers, and custom services
+- **Configuration tracking**: Discover and track configuration files across the system
+- **Network topology**: Map container ports and network endpoints
+
+**Planned Extensions:**
+- **Backup management**: Orchestrate backups of Neo4j, configs, Docker volumes, and projects
+- **Network configuration**: Full network interface, firewall, DNS, and VPN monitoring
+- **Resource monitoring**: System-wide CPU, memory, disk, and network metrics
+- **Configuration management**: Validation, rollback, and drift detection for configs
+- **Security monitoring**: Audit trail, CVE tracking, access monitoring (future)
+
+See `docs/unified/system_management.md` for complete domain enumeration.
+
+### 8. Agent Interface & Orchestration
 
 FastAPI remains the public interface. `/ask` orchestrates intent classification, Cypher query execution, and embedding search. Admin endpoints trigger rescans, screenshots, and automation flows. Connectors to MCP services allow Watchman to start, stop, and monitor auxiliary agents.
 
@@ -126,13 +151,22 @@ These additions are implemented via idempotent Cypher migrations under `scripts/
 
 ## Documentation Map
 
-- `docs/unified/privacy.md`: consolidated privacy and redaction policies.
-- `docs/unified/testing.md`: comprehensive test strategy for collectors and API layers.
-- `docs/unified/troubleshooting.md`: guidance for AT-SPI, OCR, and graph ingestion issues.
-- `docs/observability/logging.md`: logging standards, sinks, and correlation guidelines.
-- `docs/domains/file_ingest_implementation.md`: detailed implementation plan for file ingestion domain
-- `docs/domains/file_ingest_documents.md`: document ingestion collector specification
-- `docs/domains/file_ingest_exports.md`: export processing collector specification
+### Core Architecture
+- `docs/unified/architecture.md`: This document - unified architecture overview
+- `docs/unified/system_management.md`: Complete enumeration of system management responsibilities
+- `docs/unified/mcp_management.md`: MCP server lifecycle and orchestration strategy
+- `docs/unified/smart_capture.md`: Smart screenshot capture features (diffing, triggers, clustering)
+
+### Domain Specifications
+- `docs/domains/file_ingest_implementation.md`: File ingestion domain implementation plan
+- `docs/domains/file_ingest_documents.md`: Document ingestion collector specification
+- `docs/domains/file_ingest_exports.md`: Export processing collector specification
+
+### Operations & Policies
+- `docs/unified/privacy.md`: Privacy and redaction policies
+- `docs/unified/testing.md`: Comprehensive test strategy
+- `docs/unified/troubleshooting.md`: Troubleshooting guidance
+- `docs/observability/logging.md`: Logging standards and correlation
 
 ## Source Repository Integration
 
