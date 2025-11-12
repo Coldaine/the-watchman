@@ -1,15 +1,25 @@
 # The Watchman
 
-A computer-centric knowledge graph system that tracks what's on your machine, what's running, what changed, what you were looking at, and what you were typing.
+A **distributed knowledge graph system** that tracks what's on **all your machines**: what's installed, what's running, what changed, what you were looking at, and what you were typing. Features master/satellite architecture with always-on queue services for zero data loss.
 
 ## Features
 
-- **System State Graph**: Maps entities and topology on your machine (files, projects, containers, services, configs)
-- **Memory & Change**: Event stream tracking file changes, container events, service restarts
-- **Visual Timeline**: Continuous screenshots with OCR for searchable screen history
+### Core Domains
+- **System State Graph**: Maps entities and topology across all machines (files, projects, containers, services, configs)
+- **Memory & Change**: Event stream tracking file changes, container events, service restarts, package installations
+- **Visual Timeline**: Continuous screenshots with smart diffing, OCR, and lazy processing
 - **GUI Event Capture**: AT-SPI collector (ColdWatch lineage) records focused text and accessibility events
-- **MCP Registry & Control**: Manage and control MCP servers via Docker Compose
+- **MCP Registry & Control**: Central orchestrator for all MCP servers (Docker + local tools)
 - **Agent Interface**: Natural language queries powered by Ollama (local) with OpenRouter fallback
+
+### Infrastructure Management
+- **Distributed Architecture**: Master/satellite/queue topology for managing multiple computers
+- **Backup Management**: Neo4j, configs, Docker volumes → S3 with verification and FIDO2 encryption
+- **Network Monitoring**: Interfaces, firewall rules, DNS, VPN, routing tables
+- **Git Runner Management**: Self-hosted CI/CD runners (GitHub Actions, GitLab CI) with auto-scaling
+- **Obsidian Vault Sync**: Auto-commit, conflict detection, media rsync, backup integration
+- **Data Retention**: Configurable policies per domain with exemptions and GDPR compliance
+- **FIDO2 Encryption**: Hardware key encryption for backups, secrets, and sensitive data
 
 ## Architecture
 
@@ -46,13 +56,18 @@ A computer-centric knowledge graph system that tracks what's on your machine, wh
 
 1. Clone the repository
 
-2. Copy environment template:
+2. Copy configuration template:
 
+   ```bash
+   cp config.toml.example config.toml
+   ```
+
+   Or use environment variables:
    ```bash
    cp .env.example .env
    ```
 
-3. Edit `.env` with your configuration
+3. Edit `config.toml` (or `.env`) with your configuration
 
 4. Start services:
 
@@ -166,24 +181,49 @@ docker-compose exec api pytest tests/integration/
 
 ## Configuration
 
-### Screenshot Intervals
+The Watchman supports **TOML configuration files** (recommended) or environment variables (legacy).
 
-Edit `SCREENSHOT_INTERVAL` in `.env` (in seconds):
+**Priority order:** `config.toml` > environment variables > `.env` file > defaults
 
-- Fast: 10 seconds (high disk usage)
-- Default: 300 seconds (5 minutes)
-- Slow: 600 seconds (10 minutes)
+### TOML Configuration (Recommended)
 
-### Privacy Controls
+Copy `config.toml.example` to `config.toml` and customize:
 
-Configure in `.env`:
+```toml
+[screenshot]
+interval = 300  # seconds
+enable_diffing = true  # Only capture when screen changes
+diff_threshold = 0.10  # 10% change required
 
+[screenshot.smart_capture]
+enable_smart_capture = true
+capture_on_app_switch = true  # Capture when changing apps
+capture_on_idle_return = true  # Capture when returning from idle
+
+[ocr]
+enable_lazy_processing = false  # Process immediately vs. on-demand
+
+[privacy]
+redact_patterns = [".*@.*\\.com", "sk-.*", "ghp_.*"]
+exclude_apps = ["keepassxc", "1password"]
+
+[features]
+visual_timeline = true
+system_graph = true
+gui_collector = false  # AT-SPI event capture
+```
+
+See `config.toml.example` for all available options.
+
+### Legacy Environment Variables
+
+Still supported for backward compatibility:
+
+- `SCREENSHOT_INTERVAL`: Capture interval in seconds (default: 300)
 - `REDACT_PATTERNS`: Regex patterns to redact from OCR
 - `EXCLUDE_APPS`: Apps to skip screenshot or GUI capture
-- `IMAGE_RETENTION_DAYS`: How long to keep raw images
-- `OCR_RETENTION_DAYS`: How long to keep OCR text
-- `GUI_CAPTURE_ENABLED`: Toggle GUI event ingestion (defaults to off)
-- `GUI_CAPTURE_TEXT`: Include raw widget text (defaults to hashes only)
+- `IMAGE_RETENTION_DAYS`: How long to keep raw images (default: 14)
+- `OCR_RETENTION_DAYS`: How long to keep OCR text (default: 90)
 
 ## Troubleshooting
 
@@ -212,25 +252,62 @@ Verify minimum file age, destination permissions, and lockfile status. See `docs
 
 ## Documentation
 
-- Unified architecture: `docs/unified/architecture.md`
-- Privacy & data handling: `docs/unified/privacy.md`
-- Testing plan: `docs/unified/testing.md`
-- Troubleshooting playbook: `docs/unified/troubleshooting.md`
-- Logging standards: `docs/observability/logging.md`
+### Core Architecture
+- **Unified architecture**: `docs/unified/architecture.md` - Complete system overview
+- **Distributed architecture**: `docs/unified/distributed_architecture.md` - Master/satellite/queue topology
+- **System management**: `docs/unified/system_management.md` - Git runners, Obsidian, backups, network, retention, FIDO2
+- **MCP management**: `docs/unified/mcp_management.md` - MCP server orchestration strategy
+- **Smart capture**: `docs/unified/smart_capture.md` - Screenshot diffing, lazy OCR, smart triggers
+
+### Operations
+- **Privacy & data handling**: `docs/unified/privacy.md`
+- **Testing plan**: `docs/unified/testing.md`
+- **Troubleshooting**: `docs/unified/troubleshooting.md`
+- **Logging standards**: `docs/observability/logging.md`
 
 ## Roadmap
 
 - [x] Phase 0: Foundation & Contracts ✅
-- [ ] Phase 1: Domain Implementations (65% complete)
-  - [x] Visual Timeline ✅
+- [ ] Phase 1: Domain Implementations (70% complete)
+  - [x] Visual Timeline (Basic) ✅
+  - [ ] Visual Timeline (Smart Features) - Planned
+    - [ ] Screenshot diffing/hashing
+    - [ ] Smart capture triggers
+    - [ ] Similarity clustering
+    - [ ] Lazy OCR processing
   - [x] System Graph Seeders ✅
   - [x] Event & Change Tracking ✅
+  - [x] File Ingest Domain ✅
+- [ ] Phase 2: Distributed & Infrastructure
+  - [ ] Distributed Architecture
+    - [ ] Master/satellite/queue modes
+    - [ ] Data forwarding and offline buffering
+    - [ ] Machine provisioning API
+    - [ ] Always-on queue service (Raspberry Pi)
   - [ ] MCP Registry & Control (25% - stubs)
-  - [ ] File Ingest Domain (planned - from file-watchman)
-- [ ] Phase 2: Integration & Orchestration
-- [ ] Web UI (React + GraphQL)
-- [ ] Browser extension integration
-- [ ] Mobile companion app
+    - [ ] Complete MCP server lifecycle management
+    - [ ] Docker Hub integration
+    - [ ] Local tool installation strategy
+  - [ ] System Management Domain
+    - [x] Software install monitoring (documented)
+    - [ ] Backup management (orchestrator, verification, S3, FIDO2)
+    - [ ] Network monitoring (topology, firewall, VPN)
+    - [ ] Git runner management (GitHub Actions, GitLab CI)
+    - [ ] Obsidian vault sync (git, rsync, conflicts)
+    - [ ] Data retention policies (per-domain, exemptions)
+    - [ ] FIDO2 encryption (backups, secrets)
+    - [ ] Resource monitoring (CPU, memory, disk, I/O)
+    - [ ] Configuration management (validation, rollback)
+- [ ] Phase 3: Integration & Orchestration
+  - [ ] Agent Interface completion
+  - [ ] Review API (/review endpoint)
+  - [ ] MCP orchestration & assignment
+- [ ] Phase 4: Advanced Features
+  - [ ] Web UI (React + GraphQL)
+  - [ ] Browser extension integration
+  - [ ] Mobile companion app
+  - [ ] Proactive automation triggers
+  - [ ] Security monitoring (CVE tracking, audit trail)
 
 ## License
 

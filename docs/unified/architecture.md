@@ -1,14 +1,16 @@
 # Unified Architecture
 
-**Last Updated:** 2025-10-14
+**Last Updated:** 2025-11-11
 
-The Watchman is now the canonical platform for system awareness, knowledge capture, and automation across the desktop. This document synthesizes the architecture plans and domain specifications that previously lived in the `coldwatch`, `file-watchman`, and `the-watchman` repositories.
+The Watchman is now the canonical platform for system awareness, knowledge capture, and automation across **multiple machines**. This document synthesizes the architecture plans and domain specifications that previously lived in the `coldwatch`, `file-watchman`, and `the-watchman` repositories.
 
 ## Guiding Principles
 
-- **Local-first:** All data lives on the machine. No cloud dependencies for core capture or analysis.
+- **Local-first:** All data lives on your machines. No cloud dependencies for core capture or analysis.
+- **Distributed by design:** Supports master/satellite topology for managing multiple computers with a unified knowledge graph.
 - **Graph-centric:** Neo4j remains the system of record. Every collector writes entities and relationships into the graph so queries span domains without translation layers.
 - **Modular collectors:** Each sensor runs as an independent worker with a narrow responsibility. Collectors can be enabled or disabled via configuration without impacting the rest of the system.
+- **Always-on resilience:** Queue services (e.g., Raspberry Pi) buffer data when master is offline, ensuring no data loss.
 - **Actionable output:** The `/ask` API, automation runner, and MCP control layer turn captured knowledge into concrete answers or actions.
 
 ## The Power of Unification: Cross-Domain Queries
@@ -73,7 +75,32 @@ The personal automation scripts evolve into three long-running collectors that w
 
 All collectors share common processing utilities: content hashing, tag/type-based routing, and Neo4j graph writing. Files are tracked throughout their lifecycle with full provenance in the graph.
 
-### 6. Agent Interface & Orchestration
+### 6. MCP Registry & Control
+
+The Watchman serves as the **central orchestrator for all MCP servers** in the environment. It manages the complete lifecycle: discovery, deployment, health monitoring, and tool indexing. Supports both Docker-based and local binary deployments, with Docker Hub integration for discovering new MCP servers.
+
+See `docs/unified/mcp_management.md` for complete specification.
+
+### 7. System Management & Infrastructure
+
+The Watchman is responsible for monitoring and managing all system-level concerns:
+
+**Current Responsibilities:**
+- **Software installation monitoring**: Track package installs/updates/removals via package manager logs
+- **Service monitoring**: Track systemd services, Docker containers, and custom services
+- **Configuration tracking**: Discover and track configuration files across the system
+- **Network topology**: Map container ports and network endpoints
+
+**Planned Extensions:**
+- **Backup management**: Orchestrate backups of Neo4j, configs, Docker volumes, and projects
+- **Network configuration**: Full network interface, firewall, DNS, and VPN monitoring
+- **Resource monitoring**: System-wide CPU, memory, disk, and network metrics
+- **Configuration management**: Validation, rollback, and drift detection for configs
+- **Security monitoring**: Audit trail, CVE tracking, access monitoring (future)
+
+See `docs/unified/system_management.md` for complete domain enumeration.
+
+### 8. Agent Interface & Orchestration
 
 FastAPI remains the public interface. `/ask` orchestrates intent classification, Cypher query execution, and embedding search. Admin endpoints trigger rescans, screenshots, and automation flows. Connectors to MCP services allow Watchman to start, stop, and monitor auxiliary agents.
 
@@ -124,15 +151,45 @@ These additions are implemented via idempotent Cypher migrations under `scripts/
 - Retry policies and circuit breakers isolate transient failures (DBus, Neo4j outages).
 - Sampling controls prevent AT-SPI floods; ingestion collectors enforce queue depth limits.
 
+## Distributed Architecture
+
+The Watchman supports three deployment modes for managing multiple machines:
+
+1. **Master Mode** - Full installation with Neo4j, all collectors, complete query interface
+2. **Satellite Mode** - Lightweight collector that forwards data to master (laptops, work PCs)
+3. **Queue Mode** - Always-on buffer service (Raspberry Pi) that queues data when master is offline
+
+This enables scenarios like:
+- Primary dev machine (master) + multiple laptops (satellites)
+- Always-on Raspberry Pi buffering data when dev machine is shut down
+- Unified knowledge graph spanning all your computers
+- Automated provisioning of new machines with generated configs
+
+See `docs/unified/distributed_architecture.md` for complete specification including:
+- Master/satellite/queue architecture diagrams
+- Data forwarding and offline buffering
+- Machine provisioning and configuration management
+- Graph schema for multi-machine topology
+
 ## Documentation Map
 
-- `docs/unified/privacy.md`: consolidated privacy and redaction policies.
-- `docs/unified/testing.md`: comprehensive test strategy for collectors and API layers.
-- `docs/unified/troubleshooting.md`: guidance for AT-SPI, OCR, and graph ingestion issues.
-- `docs/observability/logging.md`: logging standards, sinks, and correlation guidelines.
-- `docs/domains/file_ingest_implementation.md`: detailed implementation plan for file ingestion domain
-- `docs/domains/file_ingest_documents.md`: document ingestion collector specification
-- `docs/domains/file_ingest_exports.md`: export processing collector specification
+### Core Architecture
+- `docs/unified/architecture.md`: This document - unified architecture overview
+- `docs/unified/distributed_architecture.md`: Multi-machine master/satellite/queue topology
+- `docs/unified/system_management.md`: Complete enumeration of system management responsibilities
+- `docs/unified/mcp_management.md`: MCP server lifecycle and orchestration strategy
+- `docs/unified/smart_capture.md`: Smart screenshot capture features (diffing, triggers, clustering)
+
+### Domain Specifications
+- `docs/domains/file_ingest_implementation.md`: File ingestion domain implementation plan
+- `docs/domains/file_ingest_documents.md`: Document ingestion collector specification
+- `docs/domains/file_ingest_exports.md`: Export processing collector specification
+
+### Operations & Policies
+- `docs/unified/privacy.md`: Privacy and redaction policies
+- `docs/unified/testing.md`: Comprehensive test strategy
+- `docs/unified/troubleshooting.md`: Troubleshooting guidance
+- `docs/observability/logging.md`: Logging standards and correlation
 
 ## Source Repository Integration
 

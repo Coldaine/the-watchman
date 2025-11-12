@@ -1,0 +1,218 @@
+# The Watchman Configuration File
+# Copy this to config.toml and customize for your environment
+
+# ============================================================================
+# DEPLOYMENT MODE
+# ============================================================================
+# The Watchman can run in three modes:
+# - master: Full installation with Neo4j, all collectors, query interface
+# - satellite: Lightweight collector that forwards data to master
+# - queue: Always-on buffer service (e.g., Raspberry Pi) for when master is offline
+
+[mode]
+type = "master"  # Options: master, satellite, queue
+instance_id = "watchman-primary"  # Unique identifier for this instance
+
+# Master-specific settings (only used if type = "master")
+[master]
+enable_ingestion = true  # Accept data from satellites
+listen_address = "0.0.0.0:8000"
+
+# TLS for secure satellite connections
+tls_enabled = false
+tls_cert = "/etc/watchman/certs/master.crt"
+tls_key = "/etc/watchman/certs/master.key"
+
+# Authentication for satellites
+satellite_auth_enabled = true
+satellite_tokens_file = "/etc/watchman/satellite_tokens.yaml"
+
+# Always-on queue service integration
+queue_service_enabled = false
+queue_service_url = "https://queue.home.lan:8001"
+queue_poll_interval = 60  # seconds
+
+# Satellite-specific settings (only used if type = "satellite")
+[satellite]
+master_url = "https://watchman.home.lan:8000"
+auth_token = ""  # Generated during registration
+
+# Retry policy for master connection
+retry_enabled = true
+retry_max_attempts = 5
+retry_backoff = "exponential"  # 2s, 4s, 8s, 16s, 32s
+
+# Offline buffering when master is unreachable
+buffer_enabled = true
+buffer_dir = "/var/lib/watchman/buffer"
+buffer_max_size_mb = 1000
+buffer_flush_interval = 60  # seconds
+
+# Data forwarding settings
+forward_batch_size = 100  # Events per batch
+forward_compression = true  # gzip compression
+
+# Queue-specific settings (only used if type = "queue")
+[queue]
+listen_address = "0.0.0.0:8001"
+
+# Redis for buffering
+redis_url = "redis://localhost:6379"
+redis_queue_key = "watchman:queue"
+redis_max_memory_mb = 500
+
+# Disk overflow (if Redis full)
+disk_overflow_enabled = true
+disk_overflow_dir = "/mnt/storage/watchman/queue"
+disk_overflow_max_gb = 10
+
+# Master forwarding
+queue_master_url = "https://watchman.home.lan:8000"
+queue_master_auth_token = ""  # Queue service auth token
+queue_master_poll_interval = 60  # Check if master is online
+queue_flush_batch_size = 500
+queue_flush_interval = 30  # seconds when master online
+
+# Health monitoring
+queue_health_check_enabled = true
+queue_alert_on_size_mb = 800  # Alert if queue growing too large
+
+# ============================================================================
+# DATABASE (Master mode only - ignored in satellite/queue modes)
+# ============================================================================
+
+[neo4j]
+uri = "bolt://localhost:7687"
+user = "neo4j"
+password = "watchman123"
+
+[api]
+port = 8000
+log_level = "INFO"
+title = "The Watchman API"
+version = "1.0.0"
+
+[ollama]
+url = "http://192.168.1.69:11434"
+embedding_model = "nomic-embed-text"
+chat_model = "llama3.2"
+
+[openrouter]
+# Fallback LLM provider
+api_key = ""  # Leave empty to disable
+model = "anthropic/claude-3.5-sonnet"
+
+[screenshot]
+# Base interval for time-based capture (seconds)
+interval = 300  # 5 minutes
+dir = "/var/lib/watchman/shots"
+
+# Screenshot diffing - only capture when screen changes
+enable_diffing = true
+diff_threshold = 0.10  # Capture if >10% of pixels changed
+diff_algorithm = "phash"  # Options: phash, dhash, pixel
+
+# Smart capture triggers
+enable_smart_capture = true
+capture_on_app_switch = true  # Capture when active window changes
+capture_on_idle_return = true  # Capture when user returns from idle
+idle_threshold = 300  # seconds before considered idle
+
+# Similarity detection for deduplication
+enable_similarity_clustering = true
+similarity_threshold = 0.95  # 95% similar = duplicate
+cluster_window = 3600  # seconds - only compare within 1 hour window
+
+[ocr]
+dir = "/var/lib/watchman/ocr"
+chunk_dir = "/var/lib/watchman/chunks"
+queue_size = 100
+worker_threads = 2
+
+# Lazy OCR processing
+enable_lazy_processing = false  # If true, only process on-demand
+auto_process_recent = true  # Process last 1 hour automatically
+recent_threshold = 3600  # seconds
+
+[embedding]
+batch_size = 10
+
+[retention]
+# How long to keep raw images (days)
+image_retention_days = 14
+# How long to keep OCR text (days)
+ocr_retention_days = 90
+# Auto-delete similar/duplicate screenshots
+auto_delete_duplicates = false
+
+[privacy]
+# Regex patterns to redact from OCR text
+redact_patterns = [
+    ".*@.*\\.com",
+    "sk-.*",
+    "ghp_.*",
+    "AWS.*",
+    "\\d{3}-\\d{2}-\\d{4}",  # SSN
+]
+
+# Applications to exclude from capture
+exclude_apps = [
+    "keepassxc",
+    "gnome-keyring",
+    "1password",
+]
+
+# Window titles to exclude (regex)
+exclude_window_patterns = [
+    ".*password.*",
+    ".*private.*",
+]
+
+[system]
+# Project directories to scan
+project_roots = [
+    "/home/user/projects",
+    "/home/user/code",
+    "/home/user/dev",
+]
+
+# Configuration directories to monitor
+config_roots = [
+    "/etc",
+    "~/.config",
+    "~/.ssh",
+]
+
+[mcp]
+registry_path = "/opt/mcp"
+registry_file = "config/mcp_registry.yaml"
+
+[redis]
+# Optional - for distributed queue management
+url = ""  # Leave empty to use filesystem queue
+
+[review]
+# Lazy review features
+enable_lazy_review = true
+# Summarization model for review sessions
+summarization_model = "llama3.2"
+# Generate timeline summaries
+auto_generate_summaries = false
+summary_interval = 3600  # Generate hourly summaries
+
+[features]
+# Feature flags for experimental/optional features
+visual_timeline = true
+system_graph = true
+event_tracking = true
+gui_collector = false  # AT-SPI GUI event capture
+file_ingest = true
+mcp_registry = true
+agent_interface = true
+
+[performance]
+# Performance tuning
+screenshot_compression_quality = 85  # 1-100, JPEG quality
+screenshot_max_dimension = 1920  # Scale down larger screenshots
+enable_incremental_hashing = true  # Hash only changed regions
+hash_grid_size = 16  # Grid size for incremental hashing
