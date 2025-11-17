@@ -51,6 +51,7 @@ class IntentClassifier:
             r'list .* (containers|mcps|mcp|services)',
             r'show .* (containers|services|mcps)',
             r'(are|is) .* (running|up|down|active)',
+            r'list (containers|services|mcps?)',
         ]
     }
 
