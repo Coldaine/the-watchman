@@ -21,13 +21,14 @@ RUN apt-get update && apt-get install -y \
 # Set working directory
 WORKDIR /app
 
-# Copy requirements first for layer caching
-COPY requirements.txt .
-COPY requirements-dev.txt .
+# Install uv
+RUN pip install uv
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
-RUN pip install --no-cache-dir -r requirements-dev.txt
+# Copy project configuration and lock file
+COPY pyproject.toml uv.lock ./
+
+# Install Python dependencies using uv sync for reproducible builds
+RUN uv pip sync --system --no-cache uv.lock
 
 # Copy application code
 COPY . .

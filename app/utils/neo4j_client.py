@@ -74,7 +74,7 @@ class Neo4jClient:
             tx.run(query, parameters or {})
 
         with self.session() as session:
-            session.write_transaction(work)
+            session.execute_write(work)
 
     def execute_read(self, query: str, parameters: Dict[str, Any] = None) -> List[Dict[str, Any]]:
         """Execute read query and return results as list of dicts."""

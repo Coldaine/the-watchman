@@ -118,9 +118,10 @@ def test_docker_scanner_maps_container_to_graph(test_subject_container: Containe
             assert labels["owner"] == "test-suite"
 
             # Check for the exposed NetworkEndpoint and the relationship
+            # We specifically look for the IPv4 endpoint as Docker may create both IPv4 and IPv6 bindings.
             endpoint_result = session.run(
                 """
-                MATCH (c:Container {name: $name})-[:EXPOSES]->(e:NetworkEndpoint)
+                MATCH (c:Container {name: $name})-[:EXPOSES]->(e:NetworkEndpoint {host: '0.0.0.0'})
                 RETURN e
                 """,
                 name=TEST_CONTAINER_NAME
