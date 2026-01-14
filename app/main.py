@@ -8,24 +8,24 @@ Computer-centric knowledge graph system that tracks:
 - MCP server registry and control
 """
 
+import sys
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from loguru import logger
-import sys
 
+from app.api import admin, ask, health, mcp
 from app.utils.config import get_settings
-from app.utils.neo4j_client import get_neo4j_client, close_neo4j_client
-from app.api import health, ask, admin, mcp
-
+from app.utils.neo4j_client import close_neo4j_client, get_neo4j_client
 
 # Configure logging
 logger.remove()
 logger.add(
     sys.stdout,
     format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan> - <level>{message}</level>",
-    level="INFO"
+    level="INFO",
 )
 
 
@@ -57,7 +57,7 @@ app = FastAPI(
     title=settings.api_title,
     version=settings.api_version,
     description="Computer-centric knowledge graph and context engine",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # Add CORS middleware
@@ -79,8 +79,8 @@ async def global_exception_handler(request: Request, exc: Exception):
         status_code=500,
         content={
             "error": "Internal server error",
-            "detail": str(exc) if settings.log_level == "DEBUG" else "An error occurred"
-        }
+            "detail": str(exc) if settings.log_level == "DEBUG" else "An error occurred",
+        },
     )
 
 
@@ -99,16 +99,17 @@ async def root():
         "version": settings.api_version,
         "status": "operational",
         "docs": "/docs",
-        "health": "/health"
+        "health": "/health",
     }
 
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(
         "app.main:app",
         host="0.0.0.0",
         port=settings.api_port,
         reload=True,
-        log_level=settings.log_level.lower()
+        log_level=settings.log_level.lower(),
     )

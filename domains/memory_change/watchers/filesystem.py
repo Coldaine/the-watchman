@@ -9,17 +9,16 @@ Uses watchdog library for cross-platform file system event monitoring.
 import sys
 import time
 from pathlib import Path
-from typing import Set
 
-from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler, FileSystemEvent
 from loguru import logger
+from watchdog.events import FileSystemEvent, FileSystemEventHandler
+from watchdog.observers import Observer
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
 from app.utils.config import get_settings
-from app.utils.neo4j_client import get_neo4j_client
 from app.utils.helpers import generate_uuid, now_iso, should_exclude_path
+from app.utils.neo4j_client import get_neo4j_client
 
 
 class WatchmanEventHandler(FileSystemEventHandler):
@@ -34,7 +33,7 @@ class WatchmanEventHandler(FileSystemEventHandler):
         """
         super().__init__()
         self.neo4j = neo4j_client
-        self.excluded_extensions = {'.pyc', '.swp', '.tmp', '__pycache__'}
+        self.excluded_extensions = {".pyc", ".swp", ".tmp", "__pycache__"}
 
     def should_process(self, path: str) -> bool:
         """
@@ -58,12 +57,7 @@ class WatchmanEventHandler(FileSystemEventHandler):
 
         return True
 
-    def create_event_node(
-        self,
-        event_type: str,
-        path: str,
-        is_directory: bool
-    ):
+    def create_event_node(self, event_type: str, path: str, is_directory: bool):
         """
         Create Event node in Neo4j.
 
@@ -87,13 +81,16 @@ class WatchmanEventHandler(FileSystemEventHandler):
         """
 
         try:
-            self.neo4j.execute_write(query, {
-                "id": event_id,
-                "ts": timestamp,
-                "type": event_type,
-                "path": path,
-                "is_directory": is_directory
-            })
+            self.neo4j.execute_write(
+                query,
+                {
+                    "id": event_id,
+                    "ts": timestamp,
+                    "type": event_type,
+                    "path": path,
+                    "is_directory": is_directory,
+                },
+            )
 
             logger.debug(f"Event created: {event_type} {path}")
 
@@ -124,10 +121,7 @@ class WatchmanEventHandler(FileSystemEventHandler):
         """
 
         try:
-            self.neo4j.execute_write(query, {
-                "event_id": event_id,
-                "path": path
-            })
+            self.neo4j.execute_write(query, {"event_id": event_id, "path": path})
 
         except Exception as e:
             logger.debug(f"Could not link event to file/directory: {e}")
@@ -184,13 +178,16 @@ class WatchmanEventHandler(FileSystemEventHandler):
         """
 
         try:
-            self.neo4j.execute_write(query, {
-                "id": event_id,
-                "ts": timestamp,
-                "src_path": event.src_path,
-                "dest_path": event.dest_path,
-                "is_directory": event.is_directory
-            })
+            self.neo4j.execute_write(
+                query,
+                {
+                    "id": event_id,
+                    "ts": timestamp,
+                    "src_path": event.src_path,
+                    "dest_path": event.dest_path,
+                    "is_directory": event.is_directory,
+                },
+            )
 
         except Exception as e:
             logger.warning(f"Failed to create MOVE event: {e}")
@@ -213,10 +210,10 @@ class FileSystemWatcher:
         # Create observer
         self.observer = Observer()
 
-        logger.info(f"File system watcher initialized")
+        logger.info("File system watcher initialized")
         logger.info(f"Watching directories: {self.watch_dirs}")
 
-    def _get_watch_directories(self) -> Set[Path]:
+    def _get_watch_directories(self) -> set[Path]:
         """
         Get set of directories to watch.
 
@@ -247,11 +244,7 @@ class FileSystemWatcher:
         """Start watching all configured directories."""
         for watch_dir in self.watch_dirs:
             try:
-                self.observer.schedule(
-                    self.event_handler,
-                    str(watch_dir),
-                    recursive=True
-                )
+                self.observer.schedule(self.event_handler, str(watch_dir), recursive=True)
                 logger.success(f"Started watching: {watch_dir}")
 
             except Exception as e:

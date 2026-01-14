@@ -12,18 +12,17 @@ Generates embeddings and stores chunks in Neo4j.
 import sys
 import time
 from pathlib import Path
-from typing import List, Optional
 
 import pytesseract
-from PIL import Image
 from loguru import logger
+from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from app.utils.config import get_settings
-from app.utils.neo4j_client import get_neo4j_client
 from app.utils.embedding import get_embedding_client
 from app.utils.helpers import chunk_text, hash_text, redact_text
+from app.utils.neo4j_client import get_neo4j_client
 
 
 class OCRProcessor:
@@ -37,7 +36,7 @@ class OCRProcessor:
 
         logger.info("OCR processor initialized")
 
-    def get_pending_snapshots(self, limit: int = 10) -> List[dict]:
+    def get_pending_snapshots(self, limit: int = 10) -> list[dict]:
         """
         Get snapshots that haven't been OCR processed yet.
 
@@ -65,7 +64,7 @@ class OCRProcessor:
             logger.error(f"Failed to query pending snapshots: {e}")
             return []
 
-    def extract_text_tesseract(self, image_path: str) -> Optional[str]:
+    def extract_text_tesseract(self, image_path: str) -> str | None:
         """
         Extract text from image using Tesseract OCR.
 
@@ -106,7 +105,7 @@ class OCRProcessor:
         patterns = self.settings.get_redact_patterns()
         return redact_text(text, patterns)
 
-    def process_and_chunk(self, text: str) -> List[str]:
+    def process_and_chunk(self, text: str) -> list[str]:
         """
         Process text and split into chunks.
 
@@ -125,11 +124,7 @@ class OCRProcessor:
         logger.info(f"Split text into {len(chunks)} chunks")
         return chunks
 
-    def create_chunk_nodes(
-        self,
-        snapshot_id: str,
-        chunks: List[str]
-    ) -> int:
+    def create_chunk_nodes(self, snapshot_id: str, chunks: list[str]) -> int:
         """
         Create Chunk nodes with embeddings and link to Snapshot.
 
@@ -148,7 +143,7 @@ class OCRProcessor:
                 embedding = self.embedding.sync_generate_embedding(chunk_text_content)
 
                 if embedding is None:
-                    logger.warning(f"Failed to generate embedding for chunk, skipping")
+                    logger.warning("Failed to generate embedding for chunk, skipping")
                     continue
 
                 # Create content hash
@@ -168,12 +163,15 @@ class OCRProcessor:
                 RETURN c.content_hash AS hash
                 """
 
-                result = self.neo4j.execute_read(query, {
-                    "snapshot_id": snapshot_id,
-                    "hash": content_hash,
-                    "text": chunk_text_content,
-                    "embedding": embedding
-                })
+                result = self.neo4j.execute_read(
+                    query,
+                    {
+                        "snapshot_id": snapshot_id,
+                        "hash": content_hash,
+                        "text": chunk_text_content,
+                        "embedding": embedding,
+                    },
+                )
 
                 if result:
                     created_count += 1

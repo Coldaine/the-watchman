@@ -61,6 +61,7 @@ neo4j_logs/
 .pytest_cache/
 .coverage
 htmlcov/
+coverage.xml
 .tox/
 
 # Temporary files

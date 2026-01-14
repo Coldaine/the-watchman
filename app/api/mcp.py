@@ -5,25 +5,26 @@ Allows starting, stopping, and querying MCP servers.
 """
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
-from typing import List, Dict, Any, Optional
 from loguru import logger
+from pydantic import BaseModel
 
 router = APIRouter()
 
 
 class MCPServer(BaseModel):
     """MCP server model."""
+
     name: str
     status: str
-    url: Optional[str] = None
-    compose_file: Optional[str] = None
-    tools: List[str] = []
+    url: str | None = None
+    compose_file: str | None = None
+    tools: list[str] = []
 
 
 class MCPServerList(BaseModel):
     """List of MCP servers."""
-    servers: List[MCPServer]
+
+    servers: list[MCPServer]
     total: int
 
 
@@ -40,10 +41,7 @@ async def list_mcp_servers():
     # TODO: Implement in Phase 1 (MCP Registry)
     # Query Neo4j for :MCPServer nodes
 
-    return MCPServerList(
-        servers=[],
-        total=0
-    )
+    return MCPServerList(servers=[], total=0)
 
 
 @router.get("/{name}", response_model=MCPServer)
@@ -85,7 +83,7 @@ async def start_mcp_server(name: str):
     return {
         "status": "started",
         "name": name,
-        "message": f"MCP server '{name}' started successfully"
+        "message": f"MCP server '{name}' started successfully",
     }
 
 
@@ -107,7 +105,7 @@ async def stop_mcp_server(name: str):
     return {
         "status": "stopped",
         "name": name,
-        "message": f"MCP server '{name}' stopped successfully"
+        "message": f"MCP server '{name}' stopped successfully",
     }
 
 
@@ -129,7 +127,7 @@ async def restart_mcp_server(name: str):
     return {
         "status": "restarted",
         "name": name,
-        "message": f"MCP server '{name}' restarted successfully"
+        "message": f"MCP server '{name}' restarted successfully",
     }
 
 
@@ -149,10 +147,7 @@ async def get_mcp_tools(name: str):
     # TODO: Implement in Phase 1 (MCP Registry)
     # Query (:MCPServer {name})-[:PROVIDES_TOOL]->(:Tool)
 
-    return {
-        "server": name,
-        "tools": []
-    }
+    return {"server": name, "tools": []}
 
 
 @router.post("/health-check/{name}")
@@ -170,8 +165,4 @@ async def health_check_mcp(name: str):
 
     # TODO: Implement in Phase 1 (MCP Registry)
 
-    return {
-        "server": name,
-        "healthy": False,
-        "message": "Health check not implemented"
-    }
+    return {"server": name, "healthy": False, "message": "Health check not implemented"}

@@ -8,18 +8,18 @@ Includes:
 """
 
 from fastapi import APIRouter, BackgroundTasks
-from pydantic import BaseModel
-from typing import Optional
 from loguru import logger
+from pydantic import BaseModel
 
 router = APIRouter()
 
 
 class ScanResponse(BaseModel):
     """Scan operation response."""
+
     status: str
     message: str
-    job_id: Optional[str] = None
+    job_id: str | None = None
 
 
 @router.post("/scan", response_model=ScanResponse)
@@ -45,7 +45,7 @@ async def trigger_system_scan(background_tasks: BackgroundTasks, full: bool = Fa
     return ScanResponse(
         status="queued",
         message=f"{'Full' if full else 'Incremental'} system scan queued",
-        job_id=None
+        job_id=None,
     )
 
 
@@ -61,10 +61,7 @@ async def trigger_screenshot():
 
     # TODO: Implement in Phase 1 (Visual Timeline)
 
-    return {
-        "status": "captured",
-        "message": "Screenshot captured successfully"
-    }
+    return {"status": "captured", "message": "Screenshot captured successfully"}
 
 
 @router.delete("/cleanup")
@@ -88,7 +85,7 @@ async def cleanup_old_data(days: int = 90):
     return {
         "status": "completed",
         "message": f"Cleaned up data older than {days} days",
-        "deleted_count": 0
+        "deleted_count": 0,
     }
 
 
@@ -107,16 +104,7 @@ async def get_system_stats():
     # - Recent activity
 
     return {
-        "nodes": {
-            "total": 0,
-            "by_type": {}
-        },
-        "relationships": {
-            "total": 0
-        },
-        "storage": {
-            "screenshots": "0 MB",
-            "ocr_data": "0 MB",
-            "database": "0 MB"
-        }
+        "nodes": {"total": 0, "by_type": {}},
+        "relationships": {"total": 0},
+        "storage": {"screenshots": "0 MB", "ocr_data": "0 MB", "database": "0 MB"},
     }
