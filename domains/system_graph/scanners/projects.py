@@ -6,23 +6,22 @@ Creates Project, Directory, and File nodes with appropriate relationships.
 """
 
 import sys
-from pathlib import Path
-from typing import List, Optional, Set
 from datetime import datetime
+from pathlib import Path
 
 from loguru import logger
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
 from app.utils.config import get_settings
-from app.utils.neo4j_client import get_neo4j_client
 from app.utils.helpers import (
-    generate_uuid,
     detect_project_type,
+    generate_uuid,
     is_hidden,
+    now_iso,
     should_exclude_path,
-    now_iso
 )
+from app.utils.neo4j_client import get_neo4j_client
 
 
 class ProjectScanner:
@@ -36,21 +35,21 @@ class ProjectScanner:
 
         # Important project files to track
         self.key_files = {
-            'package.json',
-            'Cargo.toml',
-            'go.mod',
-            'requirements.txt',
-            'pyproject.toml',
-            'pom.xml',
-            'build.gradle',
-            'Gemfile',
-            'composer.json',
-            'docker-compose.yml',
-            'docker-compose.yaml',
-            'Dockerfile',
-            '.env',
-            'README.md',
-            'Makefile'
+            "package.json",
+            "Cargo.toml",
+            "go.mod",
+            "requirements.txt",
+            "pyproject.toml",
+            "pom.xml",
+            "build.gradle",
+            "Gemfile",
+            "composer.json",
+            "docker-compose.yml",
+            "docker-compose.yaml",
+            "Dockerfile",
+            ".env",
+            "README.md",
+            "Makefile",
         }
 
         logger.info(f"Project scanner initialized with roots: {self.project_roots}")
@@ -77,12 +76,12 @@ class ProjectScanner:
                 return True
 
         # Check for .git directory
-        if (directory / '.git').exists():
+        if (directory / ".git").exists():
             return True
 
         return False
 
-    def scan_for_projects(self, root: Path, max_depth: int = 3) -> List[Path]:
+    def scan_for_projects(self, root: Path, max_depth: int = 3) -> list[Path]:
         """
         Recursively scan directory for projects.
 
@@ -158,13 +157,16 @@ class ProjectScanner:
         """
 
         try:
-            result = self.neo4j.execute_read(query, {
-                "id": project_id,
-                "path": path_str,
-                "name": project_name,
-                "type": project_type,
-                "timestamp": timestamp
-            })
+            result = self.neo4j.execute_read(
+                query,
+                {
+                    "id": project_id,
+                    "path": path_str,
+                    "name": project_name,
+                    "type": project_type,
+                    "timestamp": timestamp,
+                },
+            )
 
             if result:
                 returned_id = result[0].get("id", project_id)
@@ -197,10 +199,7 @@ class ProjectScanner:
         """
 
         try:
-            self.neo4j.execute_write(query, {
-                "path": path_str,
-                "name": name
-            })
+            self.neo4j.execute_write(query, {"path": path_str, "name": name})
             return True
 
         except Exception as e:
@@ -242,12 +241,9 @@ class ProjectScanner:
         """
 
         try:
-            self.neo4j.execute_write(query, {
-                "path": path_str,
-                "name": name,
-                "size": size,
-                "modified": modified
-            })
+            self.neo4j.execute_write(
+                query, {"path": path_str, "name": name, "size": size, "modified": modified}
+            )
             return True
 
         except Exception as e:
@@ -303,10 +299,9 @@ class ProjectScanner:
                 """
 
                 try:
-                    self.neo4j.execute_write(query, {
-                        "project_path": project_path_str,
-                        "file_path": file_path_str
-                    })
+                    self.neo4j.execute_write(
+                        query, {"project_path": project_path_str, "file_path": file_path_str}
+                    )
                     indexed_count += 1
                 except Exception as e:
                     logger.warning(f"Failed to link file to project: {e}")

@@ -5,9 +5,9 @@ from __future__ import annotations
 import json
 import logging
 import time
+from collections.abc import Iterable, Iterator, MutableMapping
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Dict, Iterable, Iterator, MutableMapping, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -17,18 +17,16 @@ class InventoryItem:
     """Normalized description of a tracked filesystem object."""
 
     absolute_path: str
-    relative_path: Optional[str]
+    relative_path: str | None
     kind: str
     size: int
     modified: float
 
-    def as_json_ready(self) -> Dict[str, object]:
+    def as_json_ready(self) -> dict[str, object]:
         """Return a JSON serialisable payload for the inventory file."""
 
         payload = asdict(self)
-        payload["modified"] = time.strftime(
-            "%Y-%m-%dT%H:%M:%S%z", time.localtime(self.modified)
-        )
+        payload["modified"] = time.strftime("%Y-%m-%dT%H:%M:%S%z", time.localtime(self.modified))
         return payload
 
 
@@ -41,7 +39,7 @@ def normalise_path(path: Path) -> Path:
         return path.expanduser().absolute()
 
 
-def relative_to_base(path: Path, base: Optional[Path]) -> Optional[str]:
+def relative_to_base(path: Path, base: Path | None) -> str | None:
     """Return ``path`` relative to ``base`` when possible."""
 
     if base is None:
@@ -53,7 +51,7 @@ def relative_to_base(path: Path, base: Optional[Path]) -> Optional[str]:
         return None
 
 
-def create_inventory_item(path: Path, base: Optional[Path]) -> Optional[InventoryItem]:
+def create_inventory_item(path: Path, base: Path | None) -> InventoryItem | None:
     """Build inventory metadata for ``path``."""
 
     path = normalise_path(path)
@@ -75,11 +73,11 @@ def create_inventory_item(path: Path, base: Optional[Path]) -> Optional[Inventor
 
 def scan_inventory(
     roots: Iterable[Path],
-    base: Optional[Path],
-) -> Dict[str, Dict[str, object]]:
+    base: Path | None,
+) -> dict[str, dict[str, object]]:
     """Build an inventory dictionary for the provided ``roots``."""
 
-    inventory: Dict[str, Dict[str, object]] = {}
+    inventory: dict[str, dict[str, object]] = {}
 
     for root in roots:
         root = normalise_path(root)
@@ -105,7 +103,7 @@ def _iter_existing_paths(root: Path) -> Iterator[Path]:
             yield child
 
 
-def dump_inventory(path: Path, inventory: MutableMapping[str, Dict[str, object]]) -> None:
+def dump_inventory(path: Path, inventory: MutableMapping[str, dict[str, object]]) -> None:
     """Persist ``inventory`` as prettified JSON."""
 
     ordered_items = sorted(

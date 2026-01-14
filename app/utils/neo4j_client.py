@@ -9,9 +9,10 @@ Provides:
 """
 
 from contextlib import contextmanager
-from typing import Any, Dict, List, Optional
-from neo4j import GraphDatabase, Session, Transaction, Result
+from typing import Any
+
 from loguru import logger
+from neo4j import GraphDatabase, Session, Transaction
 
 from app.utils.config import get_settings
 
@@ -37,7 +38,7 @@ class Neo4jClient:
                 auth=(self.user, self.password),
                 max_connection_lifetime=3600,
                 max_connection_pool_size=50,
-                connection_acquisition_timeout=120
+                connection_acquisition_timeout=120,
             )
             self._driver.verify_connectivity()
             logger.success("Connected to Neo4j successfully")
@@ -65,24 +66,25 @@ class Neo4jClient:
         finally:
             session.close()
 
-    def execute_write(self, query: str, parameters: Dict[str, Any] = None) -> None:
+    def execute_write(self, query: str, parameters: dict[str, Any] = None) -> None:
         """
         Execute a write query within an explicit transaction.
         This is the recommended way to perform writes for robustness.
         """
+
         def work(tx: Transaction):
             tx.run(query, parameters or {})
 
         with self.session() as session:
             session.execute_write(work)
 
-    def execute_read(self, query: str, parameters: Dict[str, Any] = None) -> List[Dict[str, Any]]:
+    def execute_read(self, query: str, parameters: dict[str, Any] = None) -> list[dict[str, Any]]:
         """Execute read query and return results as list of dicts."""
         with self.session() as session:
             result = session.run(query, parameters or {})
             return [dict(record) for record in result]
 
-    def create_node(self, label: str, properties: Dict[str, Any]) -> Dict[str, Any]:
+    def create_node(self, label: str, properties: dict[str, Any]) -> dict[str, Any]:
         """Create a node with given label and properties."""
         query = f"""
         CREATE (n:{label} $props)
@@ -93,7 +95,7 @@ class Neo4jClient:
             record = result.single()
             return dict(record["n"]) if record else None
 
-    def merge_node(self, label: str, merge_key: str, properties: Dict[str, Any]) -> Dict[str, Any]:
+    def merge_node(self, label: str, merge_key: str, properties: dict[str, Any]) -> dict[str, Any]:
         """Merge node (create or update) based on merge key."""
         # Extract merge property
         merge_value = properties.get(merge_key)
@@ -111,7 +113,9 @@ class Neo4jClient:
             record = result.single()
             return dict(record["n"]) if record else None
 
-    def find_node(self, label: str, property_name: str, property_value: Any) -> Optional[Dict[str, Any]]:
+    def find_node(
+        self, label: str, property_name: str, property_value: Any
+    ) -> dict[str, Any] | None:
         """Find a single node by property."""
         query = f"""
         MATCH (n:{label} {{{property_name}: $value}})
@@ -123,11 +127,13 @@ class Neo4jClient:
             record = result.single()
             return dict(record["n"]) if record else None
 
-    def find_nodes(self, label: str, filters: Dict[str, Any] = None, limit: int = 100) -> List[Dict[str, Any]]:
+    def find_nodes(
+        self, label: str, filters: dict[str, Any] = None, limit: int = 100
+    ) -> list[dict[str, Any]]:
         """Find nodes matching filters."""
         where_clause = ""
         if filters:
-            conditions = [f"n.{k} = ${k}" for k in filters.keys()]
+            conditions = [f"n.{k} = ${k}" for k in filters]
             where_clause = "WHERE " + " AND ".join(conditions)
 
         query = f"""
@@ -151,7 +157,7 @@ class Neo4jClient:
         to_label: str,
         to_key: str,
         to_value: Any,
-        rel_props: Dict[str, Any] = None
+        rel_props: dict[str, Any] = None,
     ) -> bool:
         """Create relationship between two nodes."""
         query = f"""
@@ -162,19 +168,15 @@ class Neo4jClient:
         RETURN r
         """
         with self.session() as session:
-            result = session.run(query, {
-                "from_value": from_value,
-                "to_value": to_value,
-                "rel_props": rel_props or {}
-            })
+            result = session.run(
+                query,
+                {"from_value": from_value, "to_value": to_value, "rel_props": rel_props or {}},
+            )
             return result.single() is not None
 
     def vector_search(
-        self,
-        index_name: str,
-        query_vector: List[float],
-        limit: int = 10
-    ) -> List[Dict[str, Any]]:
+        self, index_name: str, query_vector: list[float], limit: int = 10
+    ) -> list[dict[str, Any]]:
         """Perform vector similarity search."""
         query = """
         CALL db.index.vector.queryNodes($index_name, $limit, $query_vector)
@@ -183,20 +185,12 @@ class Neo4jClient:
         ORDER BY score DESC
         """
         with self.session() as session:
-            result = session.run(query, {
-                "index_name": index_name,
-                "limit": limit,
-                "query_vector": query_vector
-            })
-            return [
-                {
-                    "node": dict(record["node"]),
-                    "score": record["score"]
-                }
-                for record in result
-            ]
+            result = session.run(
+                query, {"index_name": index_name, "limit": limit, "query_vector": query_vector}
+            )
+            return [{"node": dict(record["node"]), "score": record["score"]} for record in result]
 
-    def batch_create_nodes(self, label: str, nodes: List[Dict[str, Any]]) -> int:
+    def batch_create_nodes(self, label: str, nodes: list[dict[str, Any]]) -> int:
         """Batch create nodes using UNWIND."""
         query = f"""
         UNWIND $nodes AS node
@@ -209,12 +203,7 @@ class Neo4jClient:
             record = result.single()
             return record["created"] if record else 0
 
-    def batch_merge_nodes(
-        self,
-        label: str,
-        merge_key: str,
-        nodes: List[Dict[str, Any]]
-    ) -> int:
+    def batch_merge_nodes(self, label: str, merge_key: str, nodes: list[dict[str, Any]]) -> int:
         """Batch merge nodes using UNWIND."""
         query = f"""
         UNWIND $nodes AS node
@@ -230,7 +219,7 @@ class Neo4jClient:
 
 
 # Global client instance
-_client: Optional[Neo4jClient] = None
+_client: Neo4jClient | None = None
 
 
 def get_neo4j_client() -> Neo4jClient:

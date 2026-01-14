@@ -6,9 +6,8 @@ Common functions used across domains.
 
 import hashlib
 import re
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
 
@@ -22,7 +21,7 @@ def hash_text(text: str) -> str:
     return hashlib.sha256(text.encode()).hexdigest()
 
 
-def chunk_text(text: str, max_length: int = 500, overlap: int = 50) -> List[str]:
+def chunk_text(text: str, max_length: int = 500, overlap: int = 50) -> list[str]:
     """
     Split text into chunks with optional overlap.
 
@@ -50,11 +49,7 @@ def chunk_text(text: str, max_length: int = 500, overlap: int = 50) -> List[str]
         # Try to break at sentence boundary
         if end < len(text):
             # Look for last period, question mark, or exclamation
-            last_break = max(
-                chunk.rfind('. '),
-                chunk.rfind('? '),
-                chunk.rfind('! ')
-            )
+            last_break = max(chunk.rfind(". "), chunk.rfind("? "), chunk.rfind("! "))
             if last_break > max_length // 2:  # Only break if reasonably far in
                 end = start + last_break + 2
                 chunk = text[start:end]
@@ -68,9 +63,9 @@ def chunk_text(text: str, max_length: int = 500, overlap: int = 50) -> List[str]
 def sanitize_filename(filename: str) -> str:
     """Sanitize filename by removing invalid characters."""
     # Remove invalid filename characters
-    sanitized = re.sub(r'[<>:"/\\|?*]', '_', filename)
+    sanitized = re.sub(r'[<>:"/\\|?*]', "_", filename)
     # Remove leading/trailing spaces and dots
-    sanitized = sanitized.strip('. ')
+    sanitized = sanitized.strip(". ")
     # Limit length
     if len(sanitized) > 255:
         sanitized = sanitized[:255]
@@ -79,10 +74,10 @@ def sanitize_filename(filename: str) -> str:
 
 def get_file_extension(path: Path) -> str:
     """Get file extension without dot."""
-    return path.suffix.lstrip('.')
+    return path.suffix.lstrip(".")
 
 
-def detect_project_type(project_path: Path) -> Optional[str]:
+def detect_project_type(project_path: Path) -> str | None:
     """
     Detect project type based on files present.
 
@@ -91,37 +86,37 @@ def detect_project_type(project_path: Path) -> Optional[str]:
     """
     files = {f.name for f in project_path.iterdir() if f.is_file()}
 
-    if 'package.json' in files:
-        return 'node'
-    elif 'Cargo.toml' in files:
-        return 'rust'
-    elif 'go.mod' in files:
-        return 'go'
-    elif 'requirements.txt' in files or 'pyproject.toml' in files:
-        return 'python'
-    elif 'pom.xml' in files or 'build.gradle' in files:
-        return 'java'
-    elif 'Gemfile' in files:
-        return 'ruby'
-    elif 'composer.json' in files:
-        return 'php'
-    elif 'docker-compose.yml' in files or 'docker-compose.yaml' in files:
-        return 'docker-compose'
+    if "package.json" in files:
+        return "node"
+    elif "Cargo.toml" in files:
+        return "rust"
+    elif "go.mod" in files:
+        return "go"
+    elif "requirements.txt" in files or "pyproject.toml" in files:
+        return "python"
+    elif "pom.xml" in files or "build.gradle" in files:
+        return "java"
+    elif "Gemfile" in files:
+        return "ruby"
+    elif "composer.json" in files:
+        return "php"
+    elif "docker-compose.yml" in files or "docker-compose.yaml" in files:
+        return "docker-compose"
 
     return None
 
 
 def parse_iso_timestamp(ts_str: str) -> datetime:
     """Parse ISO timestamp string to datetime."""
-    return datetime.fromisoformat(ts_str.replace('Z', '+00:00'))
+    return datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
 
 
 def now_iso() -> str:
     """Get current timestamp as ISO string."""
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
-def redact_text(text: str, patterns: List[str]) -> str:
+def redact_text(text: str, patterns: list[str]) -> str:
     """
     Redact sensitive information from text using regex patterns.
 
@@ -136,8 +131,8 @@ def redact_text(text: str, patterns: List[str]) -> str:
 
     for pattern in patterns:
         try:
-            redacted = re.sub(pattern, '[REDACTED]', redacted)
-        except re.error as e:
+            redacted = re.sub(pattern, "[REDACTED]", redacted)
+        except re.error:
             # Invalid regex pattern, skip it
             continue
 
@@ -146,7 +141,7 @@ def redact_text(text: str, patterns: List[str]) -> str:
 
 def format_bytes(bytes_count: int) -> str:
     """Format bytes as human-readable string."""
-    for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
+    for unit in ["B", "KB", "MB", "GB", "TB"]:
         if bytes_count < 1024.0:
             return f"{bytes_count:.1f} {unit}"
         bytes_count /= 1024.0
@@ -168,10 +163,10 @@ def safe_path(path: str) -> Path:
 
 def is_hidden(path: Path) -> bool:
     """Check if path is hidden (starts with dot)."""
-    return path.name.startswith('.')
+    return path.name.startswith(".")
 
 
-def should_exclude_path(path: Path, exclude_patterns: List[str] = None) -> bool:
+def should_exclude_path(path: Path, exclude_patterns: list[str] = None) -> bool:
     """
     Check if path should be excluded based on patterns.
 
@@ -184,13 +179,13 @@ def should_exclude_path(path: Path, exclude_patterns: List[str] = None) -> bool:
     """
     if exclude_patterns is None:
         exclude_patterns = [
-            '*.pyc',
-            '__pycache__',
-            'node_modules',
-            '.git',
-            '.venv',
-            'venv',
-            '.DS_Store'
+            "*.pyc",
+            "__pycache__",
+            "node_modules",
+            ".git",
+            ".venv",
+            "venv",
+            ".DS_Store",
         ]
 
     path_str = str(path)
@@ -207,7 +202,7 @@ def create_network_endpoint_key(host: str, port: int, protocol: str = "tcp") -> 
     return f"{protocol}://{host}:{port}"
 
 
-def parse_docker_image_tag(image: str) -> Dict[str, str]:
+def parse_docker_image_tag(image: str) -> dict[str, str]:
     """
     Parse Docker image string into components.
 
@@ -217,22 +212,18 @@ def parse_docker_image_tag(image: str) -> Dict[str, str]:
     Returns:
         Dict with 'registry', 'repository', 'tag'
     """
-    parts = image.split('/')
+    parts = image.split("/")
     registry = None
     repository = image
-    tag = 'latest'
+    tag = "latest"
 
     # Has registry
-    if len(parts) > 1 and ('.' in parts[0] or ':' in parts[0]):
+    if len(parts) > 1 and ("." in parts[0] or ":" in parts[0]):
         registry = parts[0]
-        repository = '/'.join(parts[1:])
+        repository = "/".join(parts[1:])
 
     # Has tag
-    if ':' in repository:
-        repository, tag = repository.rsplit(':', 1)
+    if ":" in repository:
+        repository, tag = repository.rsplit(":", 1)
 
-    return {
-        'registry': registry,
-        'repository': repository,
-        'tag': tag
-    }
+    return {"registry": registry, "repository": repository, "tag": tag}

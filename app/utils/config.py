@@ -8,8 +8,9 @@ Priority: config.toml > environment variables > .env file > defaults
 import sys
 from functools import lru_cache
 from pathlib import Path
-from typing import Optional, List, Any, Dict
-from pydantic import field_validator, model_validator
+from typing import Any
+
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Try to import tomllib (Python 3.11+) or tomli (backport)
@@ -22,7 +23,7 @@ else:
         tomllib = None
 
 
-def load_toml_config(toml_path: Path = Path("config.toml")) -> Dict[str, Any]:
+def load_toml_config(toml_path: Path = Path("config.toml")) -> dict[str, Any]:
     """
     Load configuration from TOML file.
 
@@ -81,7 +82,7 @@ class Settings(BaseSettings):
     ollama_chat_model: str = "llama3.2"
 
     # OpenRouter Configuration (fallback)
-    openrouter_api_key: Optional[str] = None
+    openrouter_api_key: str | None = None
     openrouter_model: str = "anthropic/claude-3.5-sonnet"
 
     # Screenshot Configuration
@@ -137,7 +138,7 @@ class Settings(BaseSettings):
     mcp_registry_file: Path = Path("config/mcp_registry.yaml")
 
     # Redis Configuration (optional, for queue management)
-    redis_url: Optional[str] = None
+    redis_url: str | None = None
 
     # Review Features
     review_enable_lazy_review: bool = True
@@ -161,23 +162,20 @@ class Settings(BaseSettings):
     performance_hash_grid_size: int = 16
 
     # Legacy environment variable support (backward compatibility)
-    log_level: Optional[str] = None
-    chunk_dir: Optional[Path] = None
-    image_retention_days: Optional[int] = None
-    ocr_retention_days: Optional[int] = None
-    redact_patterns: Optional[str] = None
-    exclude_apps: Optional[str] = None
-    project_roots: Optional[str] = None
-    config_roots: Optional[str] = None
+    log_level: str | None = None
+    chunk_dir: Path | None = None
+    image_retention_days: int | None = None
+    ocr_retention_days: int | None = None
+    redact_patterns: str | None = None
+    exclude_apps: str | None = None
+    project_roots: str | None = None
+    config_roots: str | None = None
 
     model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        case_sensitive=False,
-        extra="ignore"
+        env_file=".env", env_file_encoding="utf-8", case_sensitive=False, extra="ignore"
     )
 
-    @model_validator(mode='after')
+    @model_validator(mode="after")
     def handle_legacy_vars(self):
         """Map legacy environment variables to new structure."""
         # Map legacy log_level to api_log_level
@@ -208,34 +206,28 @@ class Settings(BaseSettings):
 
         return self
 
-    def get_project_roots(self) -> List[Path]:
+    def get_project_roots(self) -> list[Path]:
         """Parse project roots into list of Paths."""
-        return [
-            Path(p.strip()).expanduser()
-            for p in self.system_project_roots.split(',')
-        ]
+        return [Path(p.strip()).expanduser() for p in self.system_project_roots.split(",")]
 
-    def get_config_roots(self) -> List[Path]:
+    def get_config_roots(self) -> list[Path]:
         """Parse config roots into list of Paths."""
-        return [
-            Path(p.strip()).expanduser()
-            for p in self.system_config_roots.split(',')
-        ]
+        return [Path(p.strip()).expanduser() for p in self.system_config_roots.split(",")]
 
-    def get_redact_patterns(self) -> List[str]:
+    def get_redact_patterns(self) -> list[str]:
         """Parse redact patterns into list."""
-        return [p.strip() for p in self.privacy_redact_patterns.split(',')]
+        return [p.strip() for p in self.privacy_redact_patterns.split(",")]
 
-    def get_exclude_apps(self) -> List[str]:
+    def get_exclude_apps(self) -> list[str]:
         """Parse excluded apps into list."""
-        return [a.strip() for a in self.privacy_exclude_apps.split(',')]
+        return [a.strip() for a in self.privacy_exclude_apps.split(",")]
 
-    def get_exclude_window_patterns(self) -> List[str]:
+    def get_exclude_window_patterns(self) -> list[str]:
         """Parse excluded window patterns into list."""
-        return [p.strip() for p in self.privacy_exclude_window_patterns.split(',')]
+        return [p.strip() for p in self.privacy_exclude_window_patterns.split(",")]
 
 
-@lru_cache()
+@lru_cache
 def get_settings() -> Settings:
     """
     Get cached settings instance.

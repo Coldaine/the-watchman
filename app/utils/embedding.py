@@ -9,7 +9,7 @@ Provides:
 """
 
 import hashlib
-from typing import List, Optional
+
 import httpx
 from loguru import logger
 
@@ -30,16 +30,13 @@ class EmbeddingClient:
         """Generate cache key for text."""
         return hashlib.sha256(text.encode()).hexdigest()
 
-    async def generate_embedding_ollama(self, text: str) -> Optional[List[float]]:
+    async def generate_embedding_ollama(self, text: str) -> list[float] | None:
         """Generate embedding using Ollama."""
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.post(
                     f"{self.ollama_url}/api/embeddings",
-                    json={
-                        "model": self.ollama_model,
-                        "prompt": text
-                    }
+                    json={"model": self.ollama_model, "prompt": text},
                 )
                 response.raise_for_status()
                 data = response.json()
@@ -49,7 +46,7 @@ class EmbeddingClient:
             logger.warning(f"Ollama embedding failed: {e}")
             return None
 
-    async def generate_embedding_openrouter(self, text: str) -> Optional[List[float]]:
+    async def generate_embedding_openrouter(self, text: str) -> list[float] | None:
         """Generate embedding using OpenRouter (fallback)."""
         if not self.settings.openrouter_api_key:
             logger.warning("OpenRouter API key not configured")
@@ -66,7 +63,7 @@ class EmbeddingClient:
             logger.error(f"OpenRouter embedding failed: {e}")
             return None
 
-    async def generate_embedding(self, text: str, use_cache: bool = True) -> Optional[List[float]]:
+    async def generate_embedding(self, text: str, use_cache: bool = True) -> list[float] | None:
         """
         Generate embedding for text.
 
@@ -106,10 +103,8 @@ class EmbeddingClient:
         return embedding
 
     async def generate_embeddings_batch(
-        self,
-        texts: List[str],
-        batch_size: int = 10
-    ) -> List[Optional[List[float]]]:
+        self, texts: list[str], batch_size: int = 10
+    ) -> list[list[float] | None]:
         """
         Generate embeddings for multiple texts.
 
@@ -123,8 +118,10 @@ class EmbeddingClient:
         embeddings = []
 
         for i in range(0, len(texts), batch_size):
-            batch = texts[i:i + batch_size]
-            logger.info(f"Processing embedding batch {i // batch_size + 1}/{(len(texts) - 1) // batch_size + 1}")
+            batch = texts[i : i + batch_size]
+            logger.info(
+                f"Processing embedding batch {i // batch_size + 1}/{(len(texts) - 1) // batch_size + 1}"
+            )
 
             # Process batch items sequentially (Ollama doesn't support batch API)
             batch_embeddings = []
@@ -136,9 +133,10 @@ class EmbeddingClient:
 
         return embeddings
 
-    def sync_generate_embedding(self, text: str) -> Optional[List[float]]:
+    def sync_generate_embedding(self, text: str) -> list[float] | None:
         """Synchronous wrapper for generate_embedding."""
         import asyncio
+
         try:
             loop = asyncio.get_event_loop()
         except RuntimeError:
@@ -147,9 +145,10 @@ class EmbeddingClient:
 
         return loop.run_until_complete(self.generate_embedding(text))
 
-    def sync_generate_embeddings_batch(self, texts: List[str]) -> List[Optional[List[float]]]:
+    def sync_generate_embeddings_batch(self, texts: list[str]) -> list[list[float] | None]:
         """Synchronous wrapper for generate_embeddings_batch."""
         import asyncio
+
         try:
             loop = asyncio.get_event_loop()
         except RuntimeError:
@@ -160,7 +159,7 @@ class EmbeddingClient:
 
 
 # Global client instance
-_embedding_client: Optional[EmbeddingClient] = None
+_embedding_client: EmbeddingClient | None = None
 
 
 def get_embedding_client() -> EmbeddingClient:

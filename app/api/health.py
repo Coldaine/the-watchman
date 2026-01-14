@@ -2,18 +2,20 @@
 Health check endpoint.
 """
 
-from fastapi import APIRouter
-from pydantic import BaseModel
 from datetime import datetime
 
-from app.utils.neo4j_client import get_neo4j_client
+from fastapi import APIRouter
+from pydantic import BaseModel
+
 from app.utils.config import get_settings
+from app.utils.neo4j_client import get_neo4j_client
 
 router = APIRouter()
 
 
 class HealthResponse(BaseModel):
     """Health check response model."""
+
     status: str
     timestamp: datetime
     neo4j_connected: bool
@@ -44,5 +46,5 @@ async def health_check():
         status="healthy" if neo4j_connected else "degraded",
         timestamp=datetime.now(),
         neo4j_connected=neo4j_connected,
-        version=settings.api_version
+        version=settings.api_version,
     )

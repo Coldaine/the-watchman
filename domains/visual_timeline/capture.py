@@ -7,22 +7,21 @@ Handles X11/Wayland display access and window detection.
 """
 
 import os
+import subprocess
 import sys
 import time
-import subprocess
+from datetime import UTC, datetime
 from pathlib import Path
-from datetime import datetime, timezone
-from typing import Optional, Tuple
 
 import mss
-from PIL import Image
 from loguru import logger
+from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from app.utils.config import get_settings
-from app.utils.neo4j_client import get_neo4j_client
 from app.utils.helpers import generate_uuid, now_iso
+from app.utils.neo4j_client import get_neo4j_client
 
 
 class ScreenshotCapture:
@@ -38,7 +37,7 @@ class ScreenshotCapture:
         logger.info(f"Screenshot directory: {self.screenshot_dir}")
         logger.info(f"Capture interval: {self.settings.screenshot_interval}s")
 
-    def get_active_window_info(self) -> Tuple[Optional[str], Optional[str]]:
+    def get_active_window_info(self) -> tuple[str | None, str | None]:
         """
         Get active window information using xdotool.
 
@@ -48,10 +47,7 @@ class ScreenshotCapture:
         try:
             # Get active window ID
             result = subprocess.run(
-                ["xdotool", "getactivewindow"],
-                capture_output=True,
-                text=True,
-                timeout=2
+                ["xdotool", "getactivewindow"], capture_output=True, text=True, timeout=2
             )
 
             if result.returncode != 0:
@@ -62,19 +58,13 @@ class ScreenshotCapture:
 
             # Get window name/title
             result = subprocess.run(
-                ["xdotool", "getwindowname", window_id],
-                capture_output=True,
-                text=True,
-                timeout=2
+                ["xdotool", "getwindowname", window_id], capture_output=True, text=True, timeout=2
             )
             window_title = result.stdout.strip() if result.returncode == 0 else None
 
             # Get window class (app name)
             result = subprocess.run(
-                ["xprop", "-id", window_id, "WM_CLASS"],
-                capture_output=True,
-                text=True,
-                timeout=2
+                ["xprop", "-id", window_id, "WM_CLASS"], capture_output=True, text=True, timeout=2
             )
 
             app_name = None
@@ -92,7 +82,7 @@ class ScreenshotCapture:
             logger.warning(f"Failed to get window info: {e}")
             return None, None
 
-    def should_capture(self, app_name: Optional[str]) -> bool:
+    def should_capture(self, app_name: str | None) -> bool:
         """
         Check if screenshot should be captured based on privacy rules.
 
@@ -114,7 +104,7 @@ class ScreenshotCapture:
 
         return True
 
-    def capture_screenshot(self) -> Optional[str]:
+    def capture_screenshot(self) -> str | None:
         """
         Capture screenshot and save to disk.
 
@@ -129,17 +119,13 @@ class ScreenshotCapture:
                 screenshot = sct.grab(monitor)
 
                 # Convert to PIL Image
-                img = Image.frombytes(
-                    "RGB",
-                    screenshot.size,
-                    screenshot.bgra,
-                    "raw",
-                    "BGRX"
-                )
+                img = Image.frombytes("RGB", screenshot.size, screenshot.bgra, "raw", "BGRX")
 
                 # Generate filename
-                timestamp = datetime.now(timezone.utc)
-                filename = f"screenshot_{timestamp.strftime('%Y%m%d_%H%M%S')}_{generate_uuid()[:8]}.png"
+                timestamp = datetime.now(UTC)
+                filename = (
+                    f"screenshot_{timestamp.strftime('%Y%m%d_%H%M%S')}_{generate_uuid()[:8]}.png"
+                )
                 filepath = self.screenshot_dir / filename
 
                 # Save screenshot
@@ -153,10 +139,7 @@ class ScreenshotCapture:
             return None
 
     def create_snapshot_node(
-        self,
-        filepath: str,
-        app_name: Optional[str],
-        window_title: Optional[str]
+        self, filepath: str, app_name: str | None, window_title: str | None
     ) -> str:
         """
         Create Snapshot node in Neo4j.
@@ -184,13 +167,16 @@ class ScreenshotCapture:
         """
 
         try:
-            result = self.client.execute_read(query, {
-                "id": snapshot_id,
-                "ts": timestamp,
-                "app": app_name,
-                "window": window_title,
-                "path": filepath
-            })
+            result = self.client.execute_read(
+                query,
+                {
+                    "id": snapshot_id,
+                    "ts": timestamp,
+                    "app": app_name,
+                    "window": window_title,
+                    "path": filepath,
+                },
+            )
 
             logger.success(f"Created Snapshot node: {snapshot_id}")
             return snapshot_id
@@ -218,11 +204,14 @@ class ScreenshotCapture:
         """
 
         try:
-            self.client.execute_write(query, {
-                "snapshot_id": snapshot_id,
-                "app_key": app_name.lower().replace(" ", "_"),
-                "app_name": app_name
-            })
+            self.client.execute_write(
+                query,
+                {
+                    "snapshot_id": snapshot_id,
+                    "app_key": app_name.lower().replace(" ", "_"),
+                    "app_name": app_name,
+                },
+            )
             logger.debug(f"Linked snapshot to app: {app_name}")
 
         except Exception as e:

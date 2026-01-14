@@ -2,6 +2,9 @@
 requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools.packages.find]
+include = ["app*", "domains*", "schemas*"]
+
 [project]
 name = "the-watchman"
 version = "0.1.0"
@@ -114,6 +117,20 @@ ignore = [
     "B008",   # do not perform function call in argument defaults
     "PLR0913", # too many arguments
     "PLR2004", # magic value comparison
+    "PLR0911", # too many return statements
+    "ARG001", # unused function argument (common in FastAPI handlers)
+    "ARG002", # unused method argument (common in async methods)
+    "F841",   # local variable assigned but never used
+    "SIM102", # use single if instead of nested (subjective)
+    "SIM103", # return condition directly (subjective)
+    "SIM108", # use ternary operator (subjective)
+    "SIM110", # use any() instead of for loop (subjective)
+    "PLW0603", # using global statement (singleton pattern)
+    "PLW1510", # subprocess.run without explicit check (handled case-by-case)
+    "PLW2901", # for loop variable overwritten (intentional in some cases)
+    "PLC0415", # import not at top level (needed for conditional imports)
+    "UP028",  # replace yield with yield from (subjective)
+    "UP036",  # version block outdated (needed for backwards compatibility)
 ]
 
 # Exclude directories

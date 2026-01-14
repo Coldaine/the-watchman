@@ -14,8 +14,8 @@ import logging
 import signal
 import sys
 import threading
+from collections.abc import MutableMapping
 from pathlib import Path
-from typing import Dict, MutableMapping, Optional
 
 from watchdog.events import DirModifiedEvent, FileSystemEvent, FileSystemEventHandler
 from watchdog.observers import Observer
@@ -36,9 +36,9 @@ class InventoryEventHandler(FileSystemEventHandler):
 
     def __init__(
         self,
-        inventory: MutableMapping[str, Dict[str, object]],
+        inventory: MutableMapping[str, dict[str, object]],
         lock: threading.Lock,
-        base: Optional[Path],
+        base: Path | None,
         output_file: Path,
         log_events: bool,
     ) -> None:
@@ -110,7 +110,7 @@ class InventoryEventHandler(FileSystemEventHandler):
             dump_inventory(self.output_file, self.inventory)
 
 
-def parse_args(argv: Optional[list[str]] = None) -> argparse.Namespace:
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     """Parse CLI arguments."""
 
     parser = argparse.ArgumentParser(
@@ -166,7 +166,7 @@ def parse_args(argv: Optional[list[str]] = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def main(argv: Optional[list[str]] = None) -> int:
+def main(argv: list[str] | None = None) -> int:
     """Entry point for the CLI script."""
 
     args = parse_args(argv)

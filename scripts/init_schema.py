@@ -9,11 +9,11 @@ Usage:
     python scripts/init_schema.py
 """
 
-import os
 import sys
 from pathlib import Path
-from neo4j import GraphDatabase
+
 from loguru import logger
+from neo4j import GraphDatabase
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -27,18 +27,15 @@ def read_schema_file(filepath: Path) -> list[str]:
 
     Ignores comments and empty lines.
     """
-    with open(filepath, 'r') as f:
+    with open(filepath) as f:
         content = f.read()
 
     # Split by semicolons, filter out comments and empty lines
     statements = []
-    for stmt in content.split(';'):
+    for stmt in content.split(";"):
         # Remove comment lines
-        lines = [
-            line for line in stmt.split('\n')
-            if not line.strip().startswith('//')
-        ]
-        stmt_clean = '\n'.join(lines).strip()
+        lines = [line for line in stmt.split("\n") if not line.strip().startswith("//")]
+        stmt_clean = "\n".join(lines).strip()
 
         if stmt_clean:
             statements.append(stmt_clean)
@@ -99,8 +96,7 @@ def main():
     # Connect to Neo4j
     logger.info(f"Connecting to Neo4j at {settings.neo4j_uri}...")
     driver = GraphDatabase.driver(
-        settings.neo4j_uri,
-        auth=(settings.neo4j_user, settings.neo4j_password)
+        settings.neo4j_uri, auth=(settings.neo4j_user, settings.neo4j_password)
     )
 
     try:
@@ -117,7 +113,7 @@ def main():
         # Execute statements
         success, failed = execute_schema_statements(driver, statements)
 
-        logger.info(f"\n=== Results ===")
+        logger.info("\n=== Results ===")
         logger.info(f"  Success: {success}")
         logger.info(f"  Failed: {failed}")
 

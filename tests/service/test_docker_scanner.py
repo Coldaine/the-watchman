@@ -8,30 +8,32 @@ This test follows the Pragmatic Test Architect philosophy:
 - It tells a complete story: "When the scanner runs, it accurately maps running containers."
 """
 
-import sys
-import pytest
-import docker
 import json
+import sys
 from pathlib import Path
+
+import docker
+import pytest
 from docker.models.containers import Container
-from neo4j import GraphDatabase
 from testcontainers.neo4j import Neo4jContainer
 
 # Add project root to path to allow absolute imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from domains.system_graph.scanners.docker import DockerScanner
 from app.utils.neo4j_client import Neo4jClient
+from domains.system_graph.scanners.docker import DockerScanner
 
 # A simple, lightweight container to use as our test subject
 TEST_CONTAINER_IMAGE = "nginx:1.25-alpine"
 TEST_CONTAINER_NAME = "watchman-test-subject-nginx"
 TEST_HOST_PORT = 8088
 
+
 @pytest.fixture(scope="module")
 def docker_client() -> docker.DockerClient:
     """Provides a Docker client for test setup."""
     return docker.from_env()
+
 
 @pytest.fixture(scope="module")
 def test_subject_container(docker_client: docker.DockerClient) -> Container:
@@ -47,12 +49,12 @@ def test_subject_container(docker_client: docker.DockerClient) -> Container:
         existing.remove(force=True)
         print(f"Removed existing test container: {TEST_CONTAINER_NAME}")
     except docker.errors.NotFound:
-        pass # It's fine if it doesn't exist
+        pass  # It's fine if it doesn't exist
 
     container = docker_client.containers.run(
         TEST_CONTAINER_IMAGE,
         name=TEST_CONTAINER_NAME,
-        ports={'80/tcp': TEST_HOST_PORT},
+        ports={"80/tcp": TEST_HOST_PORT},
         labels={"com.watchman.test": "true", "owner": "test-suite"},
         detach=True,
     )
@@ -73,17 +75,14 @@ def test_docker_scanner_maps_container_to_graph(test_subject_container: Containe
 
         # 1. Create a Neo4j client connected to our test container
         test_neo4j_client = Neo4jClient(
-            uri=neo4j.get_connection_url(),
-            user=neo4j.username,
-            password=neo4j.password
+            uri=neo4j.get_connection_url(), user=neo4j.username, password=neo4j.password
         )
 
         # 2. Use monkeypatch to force the DockerScanner to use our test DB
         #    instead of the production one from settings. This is a crucial
         #    seam that allows for isolated, large-span testing.
         monkeypatch.setattr(
-            "domains.system_graph.scanners.docker.get_neo4j_client",
-            lambda: test_neo4j_client
+            "domains.system_graph.scanners.docker.get_neo4j_client", lambda: test_neo4j_client
         )
 
         # --- Act ---
@@ -103,8 +102,7 @@ def test_docker_scanner_maps_container_to_graph(test_subject_container: Containe
         with test_neo4j_client.driver.session() as session:
             # Check for the Container node
             container_result = session.run(
-                "MATCH (c:Container {name: $name}) RETURN c",
-                name=TEST_CONTAINER_NAME
+                "MATCH (c:Container {name: $name}) RETURN c", name=TEST_CONTAINER_NAME
             ).single()
 
             assert container_result is not None, "Container node was not created"
@@ -124,10 +122,12 @@ def test_docker_scanner_maps_container_to_graph(test_subject_container: Containe
                 MATCH (c:Container {name: $name})-[:EXPOSES]->(e:NetworkEndpoint {host: '0.0.0.0'})
                 RETURN e
                 """,
-                name=TEST_CONTAINER_NAME
+                name=TEST_CONTAINER_NAME,
             ).single()
 
-            assert endpoint_result is not None, "EXPOSES relationship or NetworkEndpoint node not created"
+            assert (
+                endpoint_result is not None
+            ), "EXPOSES relationship or NetworkEndpoint node not created"
             endpoint_node = endpoint_result["e"]
             assert endpoint_node["port"] == TEST_HOST_PORT
             assert endpoint_node["host"] == "0.0.0.0"

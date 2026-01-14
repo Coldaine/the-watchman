@@ -8,36 +8,37 @@ This endpoint will route to different query types:
 - Status: MCP/container/service status
 """
 
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
-from typing import List, Dict, Any, Optional
-
+from fastapi import APIRouter
 from loguru import logger
+from pydantic import BaseModel
 
 router = APIRouter()
 
 
 class AskRequest(BaseModel):
     """Ask endpoint request model."""
+
     query: str
-    context: Optional[str] = None
+    context: str | None = None
     limit: int = 10
 
 
 class Source(BaseModel):
     """Source reference in response."""
+
     type: str
-    path: Optional[str] = None
-    timestamp: Optional[str] = None
-    entity_id: Optional[str] = None
+    path: str | None = None
+    timestamp: str | None = None
+    entity_id: str | None = None
 
 
 class AskResponse(BaseModel):
     """Ask endpoint response model."""
+
     answer: str
-    sources: List[Source]
+    sources: list[Source]
     query_type: str
-    cypher_query: Optional[str] = None
+    cypher_query: str | None = None
 
 
 @router.post("/", response_model=AskResponse)
@@ -66,12 +67,12 @@ async def ask_question(request: AskRequest):
         answer=f"Query '{request.query}' received. Full implementation coming in Phase 2.",
         sources=[],
         query_type="unknown",
-        cypher_query=None
+        cypher_query=None,
     )
 
 
 @router.post("/ingest")
-async def ingest_document(path: str, doc_type: Optional[str] = None):
+async def ingest_document(path: str, doc_type: str | None = None):
     """
     Manually ingest a document into the knowledge graph.
 
@@ -86,8 +87,4 @@ async def ingest_document(path: str, doc_type: Optional[str] = None):
 
     # TODO: Implement in Phase 1 (System Graph)
 
-    return {
-        "status": "queued",
-        "path": path,
-        "message": "Document queued for ingestion"
-    }
+    return {"status": "queued", "path": path, "message": "Document queued for ingestion"}
