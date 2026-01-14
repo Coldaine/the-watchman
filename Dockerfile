@@ -24,13 +24,18 @@ WORKDIR /app
 # Install uv
 RUN pip install uv
 
-# Copy project configuration and lock file
+# Copy project configuration and lock file first for better layer caching
 COPY pyproject.toml uv.lock ./
 
-# Install Python dependencies using uv sync for reproducible builds
-RUN uv pip sync --system --no-cache uv.lock
+# Copy source directories needed for package installation
+COPY app/ app/
+COPY domains/ domains/
+COPY schemas/ schemas/
 
-# Copy application code
+# Install Python dependencies using uv sync for reproducible builds
+RUN uv sync --no-dev --frozen --no-cache
+
+# Copy remaining application code
 COPY . .
 
 # Create data directories
