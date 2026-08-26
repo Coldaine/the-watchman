@@ -1,6 +1,6 @@
 services:
   neo4j:
-    image: neo4j:5.14-community
+    image: neo4j:5.14-community@sha256:677d3ad677cbf3993db10b60cf990b0df394687210df3f1ce124459ae8542e64
     container_name: watchman-neo4j
     ports:
       - "7474:7474"  # HTTP
