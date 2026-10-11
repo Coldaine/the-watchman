@@ -1,0 +1,296 @@
+# Librarian Agent .gitignore
+# See docs/dev/gitignore-guide.md for rationale
+
+# ============================================================================
+# Python
+# ============================================================================
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+
+# UV package manager
+# Note: uv.lock should be committed for reproducible builds
+.uv_cache/
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+test-results/
+test-reports/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# ============================================================================
+# IDEs and Editors
+# ============================================================================
+
+# VSCode
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# PyCharm
+.idea/
+*.iml
+*.iws
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# ============================================================================
+# Environment and Configuration
+# ============================================================================
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+*.env
+
+# Configuration files with secrets
+config/local.yml
+config/secrets.yml
+config/credentials.json
+
+# SSL certificates and keys
+*.pem
+*.key
+*.crt
+*.cert
+*.p12
+*.pfx
+
+# ============================================================================
+# Neo4j Database
+# ============================================================================
+
+# Neo4j data directory (local development)
+neo4j/data/
+neo4j/logs/
+neo4j/import/
+neo4j/metrics/
+neo4j/plugins/
+neo4j/certificates/
+
+# Neo4j dump files
+*.dump
+
+# ============================================================================
+# Ollama
+# ============================================================================
+
+# Ollama models (large binary files)
+ollama/models/
+ollama/blobs/
+
+# Keep config but not models
+!ollama/.gitkeep
+
+# ============================================================================
+# Docker
+# ============================================================================
+
+# Docker volumes
+docker-volumes/
+
+# Docker environment files
+docker-compose.override.yml
+
+# ============================================================================
+# Logs
+# ============================================================================
+
+logs/
+*.log
+log/
+*.log.*
+
+# ============================================================================
+# Temporary and Cache Files
+# ============================================================================
+
+# OS generated
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+*.bak
+*.swp
+
+# Cache
+.cache/
+cache/
+*.cache
+
+# ============================================================================
+# Application Specific
+# ============================================================================
+
+# Backup files
+backups/
+*.backup
+backup_*/
+
+# Generated documentation
+docs/_build/
+site/
+
+# Data files (except test fixtures)
+data/
+!tests/fixtures/
+
+# Embeddings cache (can be regenerated)
+embeddings_cache/
+.embeddings/
+
+# Vector indexes (stored in Neo4j)
+vector_indexes/
+
+# Audit logs (in production these go to persistent storage)
+audit_logs/
+*.audit
+
+# ============================================================================
+# Testing and Development
+# ============================================================================
+
+# Test databases
+test.db
+test.sqlite
+*.test.db
+
+# Profiling data
+*.prof
+*.lprof
+profile_results/
+
+# Debugging
+.debug/
+debug.log
+
+# ============================================================================
+# Build and CI/CD
+# ============================================================================
+
+# Build artifacts
+build/
+dist/
+target/
+
+# CI/CD
+.github/workflows/secrets/
+
+# ============================================================================
+# Documentation (Generated)
+# ============================================================================
+
+# Auto-generated API docs
+docs/api/generated/
+
+# Coverage reports
+htmlcov/
+.coverage
+
+# ============================================================================
+# Miscellaneous
+# ============================================================================
+
+# Notes and scratch files
+NOTES.md
+TODO.local.md
+scratch/
+sandbox/
+
+# Local experiments
+experiments/
+playground/
