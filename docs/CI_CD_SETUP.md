@@ -39,7 +39,7 @@ Runs on every push and pull request to ensure code standards:
 - **isort**: Import statement ordering
 
 #### 2. Test Suite
-Runs unit and service tests with real Neo4j:
+Runs unit and service tests with the same pinned Neo4j 5.26 LTS image used by Docker Compose:
 - **Unit Tests**: Fast, isolated component tests
 - **Service Tests**: Integration tests with Neo4j (testcontainers)
 - **Coverage Reports**: Uploaded to Codecov (when configured)
