@@ -1,0 +1,40 @@
+# Librarian Agent System - Python Dependencies
+
+# Neo4j Driver
+neo4j==5.14.0
+
+# Async Support
+asyncio==3.4.3
+nest-asyncio==1.5.8
+
+# Configuration Management
+pydantic==2.5.0
+pydantic-settings==2.1.0
+python-dotenv==1.0.0
+
+# Numerical Operations
+numpy==1.26.4
+
+# Embedding Generation
+ollama==0.1.6
+
+# Logging
+python-json-logger==2.0.7
+
+# FastAPI (for API layer - Phase 1)
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+
+# Testing
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
+
+# Type Checking (optional but recommended)
+mypy==1.7.1
+
+# Code Quality (optional)
+black==23.11.0
+flake8==6.1.0
+isort==5.12.0
