@@ -68,7 +68,9 @@ def test_docker_scanner_maps_container_to_graph(test_subject_container: Containe
     Verifies the DockerScanner can find a running container and correctly
     represent it and its exposed ports in a Neo4j graph.
     """
-    with Neo4jContainer("neo4j:5.14-community") as neo4j:
+    with Neo4jContainer(
+        "neo4j:5.26-community@sha256:c7d25c0eeebfe125718d58b72ed5d663c85d0479047733845eb2237c67ce8069"
+    ) as neo4j:
         print(f"Test Neo4j container is running at: {neo4j.get_connection_url()}")
 
         # --- Test Setup ---
